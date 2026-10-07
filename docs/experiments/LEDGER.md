@@ -90,3 +90,25 @@ the all-sports table):
 Lowering any gate (65/70/80), widening the price window, any new sizing
 formula, re-adding the dog multiplier, consensus as a signal. All refuted
 above; none has new evidence.
+
+## Window evaluation 2026-10-07 — Sep 10 → Oct 6 (see `docs/reviews/2026-10-07-sep-oct-window.md`)
+
+1,401 settled suggestions: −3.2% [−8, +2], signal CLV −2.02 pts. Published
+picks +2.4% flat, −17% sized. Research rebuild of Sep: football −22%, MLB −17%.
+
+- **EXP-020 bar met:** pick'em band 58-66, −12.1% [−26, +2] on 86 games; override picks 12-19. Recommendation: retire `price_min`.
+- **EXP-022 strengthened:** 80–89 band −19.3% [−38, −1] on 842 v4 rows; 90+ second worst; sized picks 19u behind flat. Recommendation: flat 1u.
+- **New finding — pick CLV is the book's, not the signal's.** `pickclv.py` measures book price vs Polymarket close (+1.58); close vs the sharp's entry is −2.02 on the same games. The KPI is measuring line shopping. Instrumentation change: record both.
+
+### EXP-026 — Fresh bonus and stale penalty have the wrong sign; $10–25K wager tier over-scored
+- **Status:** proposed · **Rule:** v4 points (`check.py`: fresh +10; `units.py`: stale −1u; wager $10K tier 35 pts)
+- **Prior:** live fresh −6.9% [−12, −1] n=945 vs stale +4.5% n=456; $10–25K −17.2% [−29, −6] n=254 vs <$10K ≈ 0
+- **Test:** rerun `hist_cuts.py` across the 99 research windows with (a) fresh bonus removed, (b) $10–25K tier at 20 pts; compare pick-set ROI and CLV to the frozen v4. Pass: both changes ≥ v4 on CLV in ≥ 3 sports with n ≥ 40 and not worse on ROI. Fail: either flips sign across sports.
+
+### EXP-027 — Contested markets: when both sides qualify, neither is a play
+- **Status:** proposed (design) · **Prior:** 18% of suggested markets had both sides shown; 39% of suggestions sat on one
+- **Test:** descriptive first — grade the one-sided vs two-sided suggestions in the live window (`eval_window.py` cut to add). If two-sided rows are no better than one-sided, suppress them from picks and boards and mark "contested".
+
+### EXP-028 — MLB alert-only
+- **Status:** proposed · **Prior:** live MLB −13.4% [−24, −2] n=219; picks 3-9; research Sep −17.1%, 13-month MLB −4.1%
+- **Test:** one more live month; pass if the live interval still excludes zero.
