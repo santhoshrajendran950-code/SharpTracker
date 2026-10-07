@@ -134,6 +134,7 @@ CUTS = [
     ("trader price override",                    lambda p: "override" if p.get("price_override") else "default window"),
     ("trusted size step (+1u)",                  lambda p: "trusted" if p.get("size_trusted") else "not trusted"),
     ("size vs trader's typical (s1 refuted)",    band_vs_typical),
+    ("line-move tier (EXP-030)",                 lambda p: p.get("move_tier") or "pre-EXP-030"),
     ("tier",                                     lambda p: p.get("tier") or "?"),
     ("sizing version",                           lambda p: p.get("sizing") or "s1"),
     ("book",                                     lambda p: p.get("book") or "?"),

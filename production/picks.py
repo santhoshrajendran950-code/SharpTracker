@@ -108,6 +108,9 @@ PICK_MIN_ENTRY = 0.55    # Favourites only: -122 or shorter...
 PICK_MAX_FAV = -180      # ...but nothing shorter than -180. Inside this window the
 PICK_MAX_ENTRY = 0.643   # bettor-profile score orders ROI in both windows; outside
                          # it, it does not. Both the book price and the entry pass.
+LINEMOVE_GATE = True     # EXP-030: picks only from the "toward" line-move tier. Forward test
+                         # (300 live signals) is pre-registered in docs/experiments/LEDGER.md;
+                         # flip to False to make the tier informational only.
 MAX_REST_PER_DAY = 4     # non-core picks per day; core plays are never capped
                          # by count — "a few strong opinions a day", not volume
 
@@ -129,6 +132,10 @@ def qualifies(h):
         return False, "period market — cannot be settled"
     if contested(h):
         return False, f"contested — {h.get('opposed')} sharp(s) on the other side"
+    if LINEMOVE_GATE and h.get("move_tier") in ("away", "flat"):
+        # EXP-030 (2026-10-07): the bottom 60% by predicted line move lost 6-7%
+        # in every out-of-sample quintile; only "toward" rows can be picks.
+        return False, f"line not moving toward ({h.get('move_tier')}, {h.get('move', 0):+.1f} pts) — alert only"
     e = h.get("entry") or 0
     try:
         import form
@@ -230,6 +237,7 @@ def scan(board_path, key_odds=None):
             "sizing": U.SIZING_VERSION, "tier": "core" if core else "rest",
             "price_override": _has_price_override(h.get("user")),
             "consensus": h.get("consensus", 1), "opposed": h.get("opposed", 0),
+            "move": h.get("move"), "move_tier": h.get("move_tier"),
             "book": best[0] if best else None,
             "odds": best[1] if best else None,
             "sharp_entry": h.get("entry"),

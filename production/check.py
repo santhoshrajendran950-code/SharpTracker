@@ -55,6 +55,9 @@ MONTH_POOL = 500
 #                   order outcomes (every one flips sign between windows), so
 #                   the score is only meaningful where picks.py applies it.
 MODEL_VERSION = "v4"
+LINEMOVE = True         # EXP-030 (2026-10-07): stamp every row with the line-move tier
+                        # (linemove.py). "toward" rows go first in the email; "away"/"flat"
+                        # (the bottom 60% by predicted move) are alerts only — picks.py gates.
 TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer"]   # wnba, nhl added 2026-09-30
 
 # STRICT bars (default). --loose restores the older, permissive set.
@@ -301,6 +304,7 @@ def log_signals(rows, source, now):
             "stack": r.get("stack", 1), "dog": r["dog"], "fresh": r["fresh"],
             "consensus": r.get("consensus", 1), "opposed": r.get("opposed", 0),
             "conv": round(r.get("conv", 0), 1),
+            "move": r.get("move"), "move_tier": r.get("move_tier"),
             "start": start.isoformat() if hasattr(start, "isoformat") else start,
         })
         seen[k] = r["stake"]
@@ -577,6 +581,10 @@ def main():
     for h in hits:
         h["conv"] = conviction(h)
     mark_consensus(hits)
+    if LINEMOVE:
+        import linemove
+        for h in hits:
+            h["move_tier"], h["move"] = linemove.tier(h)
 
     gate = functools.partial(passes, min_hold=min_hold, min_pnl=min_pnl,
                              min_stake=min_stake, lo=lo, hi=hi, min_score=min_score)
@@ -648,7 +656,8 @@ def main():
         # is not a play — it is not emailed. Counted so the reader knows.
         held = [h for h in new if (h.get("opposed") or 0) >= 1]
         fresh = [h for h in new if (h.get("opposed") or 0) < 1]
-        fresh.sort(key=lambda h: -h["conv"])
+        _ord = {"toward": 0, "flat": 1, "away": 2}
+        fresh.sort(key=lambda h: (_ord.get(h.get("move_tier"), 1), -h["conv"]))   # EXP-030: line moving toward first
         if fresh:
             print(f"{len(fresh)} new high-conviction play(s) "
                   f"scoring {alert:.0f}+ · {now.astimezone():%a %-I:%M %p %Z}")
@@ -668,6 +677,10 @@ def main():
                     tags.append("entered at current price")
                 if (h.get("consensus") or 1) >= 2:
                     tags.append(f"{h['consensus']} sharps this way")
+                if h.get("move_tier") == "toward":
+                    tags.append(f"line moving TOWARD this side ({h['move']:+.1f} pts expected)")
+                elif h.get("move_tier"):
+                    tags.append(f"line {'moving AWAY' if h['move_tier']=='away' else 'flat'} ({h['move']:+.1f} pts) — alert only, not a pick")
                 print(f"[{h['conv']:.0f}] {m0(h['stake'])} on {h['side']}  {am(h['entry'])}")
                 print(f"     {h['league']} · {h['game']} · {h['start'].astimezone():%-I:%M %p}"
                       f" (in {int(mins//60)}h{int(mins%60):02d}m)")

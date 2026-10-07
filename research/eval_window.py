@@ -116,6 +116,8 @@ CUTS = [
     ("stacked (2+ legs same game)", lambda s: "stacked" if (s.get("stack") or 1) >= 2 else "single"),
     ("consensus", lambda s: str(s.get("consensus") or "?")),
     ("lead time when first flagged", hours_before),
+    ("line-move tier (EXP-030; signals logged after 2026-10-07)", lambda s: s.get("move_tier") or "pre-EXP-030"),
+    ("contested (EXP-027)", lambda s: "contested" if (s.get("opposed") or 0) >= 1 else "one-sided"),
 ]
 
 

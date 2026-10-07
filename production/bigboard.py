@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-"big board" — the six-column table: Conv | Wager | Play | Odds | Game | Start.
+"big board": Profile | Size | Move | Wager | Play | Odds | Game | Start (+ bettor columns with --wide).
+Profile = v4 bettor score (a GATE, not a ranking — docs/reviews/2026-10-07-conviction-v5.md).
+Move = line-move tier and expected pts (EXP-030): only "toward" rows can be picks.
 
     python3 bigboard.py            # qualifying plays, pre-game + live
     python3 bigboard.py --pre      # upcoming only
@@ -344,6 +346,8 @@ def main():
                 flags.append("mixed sides, no stack credit")
             if (h.get("opposed") or 0) >= 1:
                 flags.append(f"CONTESTED — {h['opposed']} tracked sharp(s) on the other side, no play")
+            if h.get("move_tier"):
+                flags.append(f"line {h['move_tier']} ({h['move']:+.1f} pts)" + ("" if h["move_tier"] == "toward" else " — alert only"))
             mp = h.get("month_pnl")
             vt = h.get("vs_typical")
             print(f"[{h['conv']:.0f}]  {k(h['stake'])} on {play_text(h)}  {chk.am(h['entry'])}")
@@ -358,9 +362,9 @@ def main():
         return 0
 
     if wide:
-        print("Conv|Size|Wager|Play|Odds|Game|Start|Bettor|Hold|Month P/L|Lifetime|vs Avg|Flags")
+        print("Profile|Size|Move|Wager|Play|Odds|Game|Start|Bettor|Hold|Month P/L|Lifetime|vs Avg|Flags")
     else:
-        print("Conv|Size|Wager|Play|Odds|Game|Start")
+        print("Profile|Size|Move|Wager|Play|Odds|Game|Start")
     # Size = what picks.py would publish: units if the row is inside the price
     # window (-122..-180) and clears the pick gate, "alert" if it clears the
     # alert gate but is outside the window, "-" otherwise. Conviction (v4)
@@ -371,7 +375,8 @@ def main():
         _, size = _U.public_size(h)
         if (h.get("opposed") or 0) >= 1 and size != "—":
             size = "contested"      # EXP-027: another tracked sharp is on the other side
-        base = (f"{h['conv']:.0f}|{size}|{chk.m0(h['stake'])}|{play_text(h)}|{chk.am(h['entry'])}"
+        import linemove as _LM
+        base = (f"{h['conv']:.0f}|{size}|{_LM.label(h)}|{chk.m0(h['stake'])}|{play_text(h)}|{chk.am(h['entry'])}"
                 f"|{game_text(h)}|{start_text(h, now)}")
         if not wide:
             print(base)

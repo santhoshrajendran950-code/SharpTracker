@@ -151,7 +151,7 @@ toward the bet since entry) orders signal CLV monotonically out of sample
 in every quintile. Saved as `research/linemove_v5.json`.
 
 ### EXP-030 — Line-move tier: exclude "moving away", order alerts by expected move
-- **Status:** proposed, pre-registered · **Rule:** new column beside the score; bottom-60% tier = alert only at any price; top-40% first in the email. v4 kept as the gate; column renamed *Profile*.
+- **Status:** **running** — installed 2026-10-07 (Santhosh: "let's wire it in"): `linemove.py` + `linemove_v5.json`, `check.LINEMOVE`, `picks.LINEMOVE_GATE`, board columns Profile | Size | Move; `move`/`move_tier` logged on signals and picks; cuts added to `review.py` and `eval_window.py`. Decision at 300 settled signals (~2 weeks). · **Rule:** new column beside the score; bottom-60% tier = alert only at any price; top-40% first in the email. v4 kept as the gate; column renamed *Profile*.
 - **Prior:** research test, any price: top-40 −1.6% [−6, +2] vs bottom-60 −6.1% [−9, −3]; CLV +2.2 vs −0.9. Inside the window CLV separates, ROI does not (−3.0 vs −3.2) and flips by sport.
 - **Test (forward, live signals):** over the next 300 settled signals, "moving away" CLV < 0 and "moving toward" CLV > +1; pick-rule ROI of kept rows ≥ today's. Pass → the exclusion becomes a gate. Fail → informational only.
 - **Explicitly not proposed:** any new ROI-fitted score (third failure, third dataset).

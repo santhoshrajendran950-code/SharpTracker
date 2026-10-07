@@ -20,11 +20,14 @@ is meant to be read. `tools/nl <name>` runs any of them; the scripts live in
 Render the pipe-delimited rows as a table with exactly these columns, in
 this order:
 
-**Conv | Size | Wager | Play | Odds | Game | Start | Bettor | Hold | Month P/L | Lifetime P/L**
+**Profile | Size | Move | Wager | Play | Odds | Game | Start | Bettor | Hold | Month P/L | Lifetime P/L**
 
 - `--wide` also emits `vs Avg` and `Flags`; drop them.
-- **Conv** is v4 (bettor profile only, 20–100). **Size** is units inside the
-  −122..−180 pick window, `alert` if conv ≥ 65 outside it, `—` otherwise.
+- **Profile** is v4 (bettor profile only, 20–100) — a gate, not a ranking.
+  **Move** is the line-move tier and expected pts (`toward +2.1`, `flat`,
+  `away −1.8`); only `toward` rows can be picks. **Size** is units (1u flat)
+  inside the −122..−180 window for an uncontested `toward` row, `alert` if
+  Profile ≥ 65 but any of those fails, `—` otherwise.
 - **Bettor** is the real username. Terminal only; every public surface uses
   the codename from `anon.py`.
 - **Hold** = lifetime sports P/L ÷ volume from the leaderboard, never

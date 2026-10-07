@@ -34,9 +34,14 @@ nightly → CLV vs the Polymarket close.
 | not two-sided | — | a wallet holding both sides is a bookmaker's book, not a view |
 | hedge material | smaller side ≥ 0.25 × larger | a token opposite leg is not a hedge |
 
-## 3. The score — conviction v4 (`check.py`, `MODEL_VERSION = "v4"`, since 2026-09-23)
+## 3. The score — conviction v4, shown as **Profile** (`check.py`, `MODEL_VERSION = "v4"`, since 2026-09-23)
 
-Bettor only. **No price term.** Range 20–100.
+Bettor only. **No price term.** Range 20–100. **It is a gate, not a ranking**
+(renamed on the board 2026-10-07): across 99 research sport-months no v4
+input orders ROI out of sample, and the 80–89 band is negative with an
+interval excluding zero in both the research test set and the live window
+(`docs/reviews/2026-10-07-conviction-v5.md`). It still decides what is shown
+(≥ 65) and what may be a pick (≥ 70); it no longer sizes anything.
 
 | Component | Points |
 |---|---|
@@ -66,6 +71,28 @@ scores (inverted out of sample). See EXP-002, EXP-008, EXP-009.
 **Live warning (2026-10-07):** the 90+ band is the worst live band (19-26,
 −21% [−46, +3], 39 games) while 70–79 is 8-2. Same shape as v2's ≥99 band in
 both build windows. Open as EXP-022; not acted on (CI includes 0).
+
+## 3a. Line-move tier — `linemove.py` (EXP-030, installed 2026-10-07)
+
+Every row gets a predicted close-minus-entry in pts from `linemove_v5.json`
+(ridge on signal CLV over 99 research sport-months; the only material input
+is how far the line has already moved toward the bet since the sharp
+entered, +2.8 pts per sd). Tiers by research quintile: **toward** (top 40%),
+**flat** (Q3), **away** (bottom 40%).
+
+| Tier | Board | Email | Pick |
+|---|---|---|---|
+| toward | `Move` column, e.g. `toward +2.1` | listed first, tagged | eligible |
+| flat / away | `Size` shows `alert` | listed after, tagged "alert only" | **never** (`picks.LINEMOVE_GATE`) |
+
+Evidence (out of sample, test windows ≥ 2026-04): quintiles ran −3.15 →
++2.55 pts CLV and −7.3% → −1.3% ROI at T-60; the bottom 60% lost 6–7% in
+every quintile; the top 40% sit at the closing price minus vig. Inside the
+window the CLV separation holds but ROI does not — so this is an exclusion
+rule, not a selection edge. **Forward test pre-registered:** over the next
+300 live signals, "away" CLV < 0 and "toward" CLV > +1, and the pick-rule ROI
+of kept rows ≥ before. Fail → `LINEMOVE_GATE = False`, column stays.
+`move`/`move_tier` are logged on every signal and pick.
 
 ## 4. Price is a filter — `picks.qualifies()`
 
