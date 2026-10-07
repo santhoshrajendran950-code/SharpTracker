@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nightlyline.windows</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/bash</string><string>/Users/santhosh/.nightly-line/run-windows.sh</string></array>
+  <!-- every 4 minutes; the script no-ops cheaply unless a window is open -->
+  <key>StartInterval</key><integer>240</integer>
+  <key>WorkingDirectory</key><string>/Users/santhosh/.nightly-line</string>
+  <key>StandardOutPath</key><string>/Users/santhosh/.nightly-line/windows.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/santhosh/.nightly-line/windows.err.log</string>
+  <key>RunAtLoad</key><false/>
+  <key>ProcessType</key><string>Background</string>
+</dict>
+</plist>

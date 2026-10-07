@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly Line — sharp-money alert scan
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nightly
+WorkingDirectory=/opt/nightly-line
+ExecStart=/opt/nightly-line/deploy/alert-server.sh
+# a stuck sweep must not overlap the next timer fire
+TimeoutStartSec=600

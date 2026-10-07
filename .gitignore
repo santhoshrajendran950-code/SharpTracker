@@ -1,0 +1,42 @@
+# --- never commit: personal data, identities, secrets -----------------------
+# The trader identities are the whole edge (see production/anon.py); the bet
+# log is personal; the salt reverses every public codename. None of these
+# belong in any repo, private or not.
+bets.jsonl
+signals.jsonl
+picks.jsonl
+alerts-posted.jsonl
+ledgers/
+lines/
+trusted.json
+discovered.json
+*-snapshot.json
+*snapshot*.json
+.anon-salt
+.odds-key
+*.env
+!*.env.example
+
+# --- research raw data: wallet addresses + hundreds of MB --------------------
+windows/**/*.jsonl
+windows/**/*.json
+!windows/**/probe_results.json
+.fullfetch_*.json
+bt_positions*.jsonl
+bt_scored*.jsonl
+bt_pool.json
+bt_slate.json
+prior.json
+wallets.json
+trades.jsonl
+market_meta.json
+keep_list.txt
+
+# --- noise -------------------------------------------------------------------
+__pycache__/
+*.pyc
+*.log
+*.bak-*
+*.tmp
+.DS_Store
+/tmp/

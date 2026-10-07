@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily broad sharp-money scan
+
+[Timer]
+OnCalendar=*-*-* 09:00:00
+# if the box was down at 09:00, run once on next boot
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

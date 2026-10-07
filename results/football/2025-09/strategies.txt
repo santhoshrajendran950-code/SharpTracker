@@ -1,0 +1,84 @@
+WINDOW 2025-09 · 5839 positions · 253 games · 244 wallets · graded at T-60 price + 1.5pt vig
+TRAIN 151 games / TEST 102 games
+
+======================================================================================================================================================
+SIZING — DESCRIPTIVE, whole window
+  flat 1u (control)                        bets    66 games    44 risked      66u net    -17.0u  ROI  -25.7%  CI [-48.5, -2.5]      maxDD   17.9u  worst run  6  negative
+  s1  size-vs-typical ladder               bets    64 games    44 risked      92u net    -22.2u  ROI  -24.0%  CI [-46.5, +0.5]      maxDD   24.7u  worst run  6
+  s2  + consensus steps                    bets    64 games    44 risked     198u net    -42.1u  ROI  -21.3%  CI [-43.7, +2.2]      maxDD   48.2u  worst run  6
+  s3  + his sheet (NFL/total/longdog)      bets    64 games    44 risked     208u net    -41.8u  ROI  -20.0%  CI [-42.2, +5.7]      maxDD   51.4u  worst run  6
+  s4  core/rest tiers (live)               bets    64 games    44 risked     188u net    -40.3u  ROI  -21.5%  CI [-45.0, +4.9]      maxDD   48.2u  worst run  6
+
+SIZING — OUT OF SAMPLE: train picked 's3  + his sheet (NFL/total/longdog)' (-16.6% on train); its TEST result:
+  s3  + his sheet (NFL/total/longdog)      bets    20  (under 30, not scored)
+  (same test games, flat 1u (control))     bets    21  (under 30, not scored)
+
+======================================================================================================================================================
+SELECTION — DESCRIPTIVE, whole window
+  all qualifying (baseline)                bets    66 games    44 risked      66u net    -17.0u  ROI  -25.7%  CI [-47.4, -2.4]      negative
+  qualifying, conv >= 80                   bets    34 games    28 risked      34u net     -8.2u  ROI  -24.2%  CI [-50.7, +4.9]    
+  qualifying, price .45-.67                bets    38 games    28 risked      38u net     -7.8u  ROI  -20.6%  CI [-49.2, +13.1]   
+  qualifying, +150 or shorter (s4 gate)    bets    56 games    39 risked      56u net     -7.0u  ROI  -12.5%  CI [-36.5, +14.5]   
+  qualifying, favourites only (>.5)        bets    37 games    32 risked      37u net     +1.4u  ROI   +3.7%  CI [-21.5, +29.3]   
+  qualifying, dogs only (<.5)              bets    29  (under 30, not scored)
+  qualifying, moneylines                   bets    57 games    42 risked      57u net    -10.2u  ROI  -17.8%  CI [-40.7, +6.6]    
+  qualifying, spreads                      bets     3  (under 30, not scored)
+  qualifying, totals                       bets     6  (under 30, not scored)
+  qualifying, no totals                    bets    60 games    44 risked      60u net    -13.2u  ROI  -21.9%  CI [-44.5, +2.8]    
+  qualifying, hold >= 3%                   bets    66 games    44 risked      66u net    -17.0u  ROI  -25.7%  CI [-46.8, -3.5]      negative
+  qualifying, hold >= 5%                   bets    60 games    43 risked      60u net    -15.1u  ROI  -25.1%  CI [-48.5, +0.1]    
+  qualifying, stake >= $10K                bets    34 games    28 risked      34u net     -8.2u  ROI  -24.2%  CI [-51.4, +3.7]    
+  qualifying, stake >= $25K                bets    15  (under 30, not scored)
+  qualifying, 2x-5x their median           bets     9  (under 30, not scored)
+  qualifying, 5x+ their median             bets    33 games    29 risked      33u net     +2.0u  ROI   +6.1%  CI [-23.3, +34.6]   
+  qualifying, 15x+ their median            bets    24  (under 30, not scored)
+  qualifying, consensus >= 2               bets    64 games    44 risked      64u net    -17.2u  ROI  -26.8%  CI [-47.1, -3.4]      negative
+  qualifying, consensus >= 3               bets    58 games    42 risked      58u net    -12.4u  ROI  -21.4%  CI [-44.3, +3.3]    
+  qualifying, unopposed                    bets     0  (under 30, not scored)
+  qualifying, stacked (x2+)                bets     0  (under 30, not scored)
+  s4 CORE definition                       bets    24  (under 30, not scored)
+  his sheet: short price, no total, ML/spread bets    50 games    39 risked      50u net     -3.2u  ROI   -6.3%  CI [-31.0, +20.3]   
+  qualifying, MLB                          bets     0  (under 30, not scored)
+  qualifying, SOCCER                       bets     0  (under 30, not scored)
+  qualifying, ATP                          bets     0  (under 30, not scored)
+  qualifying, WTA                          bets     0  (under 30, not scored)
+  qualifying, NCAAF                        bets     5  (under 30, not scored)
+  qualifying, NFL                          bets    61 games    39 risked      61u net    -17.5u  ROI  -28.6%  CI [-51.7, -4.2]      negative
+
+SELECTION — OUT OF SAMPLE: train picked 'his sheet: short price, no total, ML/spread' (-4.1% on train); its TEST result:
+  his sheet: short price, no total, ML/spread bets    17  (under 30, not scored)
+  (same test games, all qualifying (baseline)) bets    21  (under 30, not scored)
+
+======================================================================================================================================================
+WALLETS — DESCRIPTIVE, whole window
+  top 5 wallets by prior hold, $2.5K+      bets    31 games    28 risked      31u net    -22.6u  ROI  -72.9%  CI [-93.6, -46.8]     negative
+  top 10 wallets by prior hold, $2.5K+     bets    81 games    57 risked      81u net    -24.3u  ROI  -30.0%  CI [-56.1, -1.3]      negative
+  top 25 wallets by prior hold, $2.5K+     bets   134 games    76 risked     134u net    -39.9u  ROI  -29.8%  CI [-48.5, -10.4]     negative
+  top 5 wallets by prior P/L, $2.5K+       bets    60 games    43 risked      60u net    -15.1u  ROI  -25.1%  CI [-48.2, +0.8]    
+  top 10 wallets by prior P/L, $2.5K+      bets   115 games    60 risked     115u net    -33.8u  ROI  -29.4%  CI [-45.7, -11.3]     negative
+  top 25 wallets by prior P/L, $2.5K+      bets   216 games    76 risked     216u net    -43.9u  ROI  -20.3%  CI [-34.6, -4.0]      negative
+  every gated wallet, $2.5K+, no score     bets    66 games    44 risked      66u net    -17.0u  ROI  -25.7%  CI [-47.8, -1.9]      negative
+  hold >= 5% wallets, $2.5K+, no score     bets   285 games    94 risked     285u net    -47.6u  ROI  -16.7%  CI [-30.0, -2.4]      negative
+  trusted.json names, $2.5K+               bets     1  (under 30, not scored)
+
+WALLETS — OUT OF SAMPLE: train picked 'hold >= 5% wallets, $2.5K+, no score' (-20.9% on train); its TEST result:
+  hold >= 5% wallets, $2.5K+, no score     bets   100 games    37 risked     100u net     -8.9u  ROI   -8.9%  CI [-25.9, +9.1]    
+
+======================================================================================================================================================
+TIMING — DESCRIPTIVE, whole window
+  qualifying, fresh (price within 10% of entry) bets    66 games    44 risked      66u net    -17.0u  ROI  -25.7%  CI [-46.4, -2.4]      negative
+  qualifying, stale                        bets     0  (under 30, not scored)
+  qualifying, market moved TOWARD them by T (>+2pt) bets     5  (under 30, not scored)
+  qualifying, market moved AGAINST them by T (<-2pt) bets     6  (under 30, not scored)
+  qualifying, price unchanged (+-2pt)      bets    55 games    39 risked      55u net    -16.7u  ROI  -30.4%  CI [-52.9, -5.4]      negative
+  at the sharp's ENTRY price instead (upper bound) bets    66 games    44 risked      66u net    -16.8u  ROI  -25.4%  CI [-47.3, -2.5]      negative
+
+TIMING — OUT OF SAMPLE: train picked 'at the sharp's ENTRY price instead (upper bound)' (-24.4% on train); its TEST result:
+  at the sharp's ENTRY price instead (upper bound) bets    21  (under 30, not scored)
+
+======================================================================================================================================================
+VERDICT
+  SIZING     s3  + his sheet (NFL/total/longdog): too few test bets
+  SELECTION  his sheet: short price, no total, ML/spread: too few test bets
+  WALLETS    hold >= 5% wallets, $2.5K+, no score         train  -20.9%  ->  test   -8.9% [-25.9, +9.1]  did not survive
+  TIMING     at the sharp's ENTRY price instead (upper bound): too few test bets

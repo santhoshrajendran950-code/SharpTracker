@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.nightlyline.xboard02</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/santhosh/.nightly-line/run-xboard.sh</string>
+		<string>all</string>
+		<string>BIG BOARD · T-15 to the noon wave</string>
+	</array>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>StandardErrorPath</key>
+	<string>/Users/santhosh/.nightly-line/xboard.err.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/santhosh/.nightly-line/xboard.out.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>11</integer>
+		<key>Minute</key>
+		<integer>45</integer>
+		<key>Weekday</key>
+		<integer>6</integer>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,8 @@
+
+esports/2025-11 · 1925 scored pre-game positions · 269 games · 310 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              17    155     6   5-1    +30.6%               +38.3%      9u   +0.75
+  B  hold>=1.5%, 90d P/L>=$100K                         11    102     4   3-1    +18.9%               +30.6%      6u   +1.12
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled             9    149     4   3-1    +18.9%               +30.6%      6u   +1.12
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            6     98     3   2-1     +7.3%               +18.9%      4u   +1.50
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            4     97     3   2-1     +7.3%               +18.9%      4u   +1.50

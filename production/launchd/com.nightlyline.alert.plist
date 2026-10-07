@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nightlyline.alert</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/santhosh/.nightly-line/alert.sh</string>
+    </array>
+
+    <!-- Every 15 minutes. Each run is ~50s of rate-limited API calls, so this is
+         about the floor before the throttle starts costing more than it returns.
+         alert.sh itself no-ops outside 8am-11pm local. -->
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/santhosh/.nightly-line</string>
+    <key>StandardOutPath</key>
+    <string>/Users/santhosh/.nightly-line/alert.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/santhosh/.nightly-line/alert.err.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

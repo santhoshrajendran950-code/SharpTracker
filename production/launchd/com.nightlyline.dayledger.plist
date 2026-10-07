@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nightlyline.dayledger</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/bash</string><string>/Users/santhosh/.nightly-line/run-dayledger.sh</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
+  <!-- if the Mac was asleep or off at 10:30, run once on next wake. This task
+       is not time-sensitive, so a late run is as good as an on-time one. -->
+  <key>Persistent</key><true/>
+  <key>WorkingDirectory</key><string>/Users/santhosh/.nightly-line</string>
+  <key>StandardOutPath</key><string>/Users/santhosh/.nightly-line/dayledger.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/santhosh/.nightly-line/dayledger.err.log</string>
+  <key>RunAtLoad</key><false/>
+  <key>ProcessType</key><string>Background</string>
+</dict>
+</plist>

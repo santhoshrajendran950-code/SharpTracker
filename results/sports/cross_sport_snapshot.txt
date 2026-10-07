@@ -1,0 +1,40 @@
+Cross-sport snapshot generated 2026-09-24 17:50:15 EDT — the all-sports run is still in progress (see all_sports.log); this is partial.
+
+28 scored windows: FOOTBALL/2025-09, FOOTBALL/2025-10, FOOTBALL/2025-11, FOOTBALL/2025-12, FOOTBALL/2026-01, FOOTBALL/2026-08, FOOTBALL/2026-09, CRICKET/2025-09, CRICKET/2025-10, CRICKET/2025-11, CRICKET/2025-12, CRICKET/2026-01, CRICKET/2026-02, CRICKET/2026-03, CRICKET/2026-04, CRICKET/2026-05, CRICKET/2026-06, CRICKET/2026-07, CRICKET/2026-08, CRICKET/2026-09, ESPORTS/2025-09, ESPORTS/2025-10, ESPORTS/2025-11, ESPORTS/2025-12, ESPORTS/2026-01, ESPORTS/2026-02, ESPORTS/2026-03, ESPORTS/2026-04
+
+sport        cut                                              type           n      W-L   hit%  flat ROI         90% CI   s5 ROI  avg CLV
+ALL SPORTS   A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          356 212-144    60%     -1.6%      [-11, +9]    -6.6%    +0.33
+ALL SPORTS   B  hold>=1.5%, 90d P/L>=$100K                    ALL          305 178-127    58%     -3.7%      [-14, +6]    -9.3%    +0.31
+ALL SPORTS   C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          299 176-123    59%     -3.0%      [-13, +7]    -9.5%    +0.32
+ALL SPORTS   D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          228 135-93     59%     -2.6%      [-13, +9]    -9.4%    +0.16
+ALL SPORTS   E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          165  99-66     60%     -1.4%     [-13, +11]    -8.6%    +0.36
+CRICKET      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      B  hold>=1.5%, 90d P/L>=$100K                    ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      B  hold>=1.5%, 90d P/L>=$100K                    moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          117  78-39     67%     +9.5%      [-5, +24]    +6.6%    +0.66
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    117  78-39     67%     +9.5%      [-5, +24]    +6.6%    +0.66
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    ALL           88  60-28     68%    +11.5%      [-5, +29]   +10.1%    +0.64
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    moneyline     88  60-28     68%    +11.5%      [-5, +29]   +10.1%    +0.64
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          105  70-35     67%     +9.0%      [-6, +23]    +3.8%    +0.61
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    105  70-35     67%     +9.0%      [-6, +23]    +3.8%    +0.61
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL           68  47-21     69%    +12.7%      [-5, +31]    +8.4%    +0.19
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline     68  47-21     69%    +12.7%      [-5, +31]    +8.4%    +0.19
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL           51  38-13     75%    +21.5%      [+1, +39]   +18.8%    +0.49
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline     51  38-13     75%    +21.5%      [+1, +39]   +18.8%    +0.49
+FOOTBALL     A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          238 133-105    56%     -7.4%      [-19, +4]   -11.7%    +0.16
+FOOTBALL     A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    238 133-105    56%     -7.4%      [-19, +4]   -11.7%    +0.16
+FOOTBALL     B  hold>=1.5%, 90d P/L>=$100K                    ALL          216 117-99     54%    -10.3%      [-23, +2]   -15.2%    +0.17
+FOOTBALL     B  hold>=1.5%, 90d P/L>=$100K                    moneyline    216 117-99     54%    -10.3%      [-23, +2]   -15.2%    +0.17
+FOOTBALL     C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          193 105-88     54%     -9.9%      [-22, +3]   -15.3%    +0.15
+FOOTBALL     C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    193 105-88     54%     -9.9%      [-22, +3]   -15.3%    +0.15
+FOOTBALL     D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          159  87-72     55%     -9.6%      [-23, +3]   -15.4%    +0.13
+FOOTBALL     D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    159  87-72     55%     -9.6%      [-23, +3]   -15.4%    +0.13
+FOOTBALL     E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          113  60-53     53%    -12.4%      [-27, +3]   -18.2%    +0.29
+FOOTBALL     E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    113  60-53     53%    -12.4%      [-27, +3]   -18.2%    +0.29

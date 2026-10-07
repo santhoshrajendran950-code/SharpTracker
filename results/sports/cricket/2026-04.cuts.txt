@@ -1,0 +1,8 @@
+
+cricket/2026-04 · 370 scored pre-game positions · 66 games · 91 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K               6      4     1   1-0    +75.4%               +75.4%      2u   +2.00
+  B  hold>=1.5%, 90d P/L>=$100K                          3      1     1   1-0    +75.4%               +75.4%      2u   +2.00
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled             4      4     1   1-0    +75.4%               +75.4%      2u   +2.00
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            1      1     1   1-0    +75.4%               +75.4%      2u   +2.00
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            1      1     1   1-0    +75.4%               +75.4%      2u   +2.00

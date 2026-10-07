@@ -1,0 +1,13 @@
+[Unit]
+Description=Run the sharp-money alert scan on a fixed cadence
+
+[Timer]
+OnCalendar=*:0/20
+# the script itself no-ops outside ACTIVE_FROM..ACTIVE_TO
+AccuracySec=30s
+Persistent=false
+# never let two sweeps overlap — concurrent scans trip Polymarket's throttle
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target
