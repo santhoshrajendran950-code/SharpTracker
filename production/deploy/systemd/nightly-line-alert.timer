@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — email alert — new 65+ positions (timer)
+
+[Timer]
+OnCalendar=*-*-* 08..23:0/15
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

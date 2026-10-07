@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nightlyline.morningscan</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/santhosh/.nightly-line/run-scan.sh</string>
+    </array>
+
+    <!-- 9:00 local time daily. launchd tracks the wall clock, so this follows
+         DST automatically — unlike a UTC cron expression. If the Mac is asleep
+         at 9:00, launchd runs the job once on the next wake instead of skipping. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/santhosh/.nightly-line</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/santhosh/.nightly-line/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/santhosh/.nightly-line/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

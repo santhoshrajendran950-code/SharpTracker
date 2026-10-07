@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nightlyline.picksresults</string>
+  <key>ProgramArguments</key>
+  <array><string>/Users/santhosh/.nightly-line/run-picks-results.sh</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>23</integer><key>Minute</key><integer>59</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/Users/santhosh/.nightly-line/picksresults.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/santhosh/.nightly-line/picksresults.err.log</string>
+</dict>
+</plist>

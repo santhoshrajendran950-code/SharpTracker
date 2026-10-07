@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — 11:30 wallet discovery (timer)
+
+[Timer]
+OnCalendar=*-*-* 11:30
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

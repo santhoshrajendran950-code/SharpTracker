@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nightlyline.catalyst</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/santhosh/.nightly-line/alert-catalyst.sh</string>
+    </array>
+
+    <!-- Every 15 minutes. An Economics-only sweep is ~300 wallets / ~15s.
+         alert-catalyst.sh no-ops outside 7am-11pm local and waits for any
+         running sports sweep so the two never hit the positions API at once. -->
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/santhosh/.nightly-line</string>
+    <key>StandardOutPath</key>
+    <string>/Users/santhosh/.nightly-line/alert-catalyst.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/santhosh/.nightly-line/alert-catalyst.err.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

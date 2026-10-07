@@ -1,0 +1,8 @@
+
+soccer/2026-01 · 5946 scored pre-game positions · 401 games · 405 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              31     64    12   7-5     -5.7%   [-52, +34]   -7.7%     16u   -0.50
+  B  hold>=1.5%, 90d P/L>=$100K                         25     55    11   7-4     +2.9%   [-46, +43]   +5.4%     14u   -0.64
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            23     55     9   5-4     -8.7%   [-58, +46]  -10.3%     13u   -0.72
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           14     27     6   4-2     +8.1%               +17.3%      7u   -0.75
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            6     11     0     —

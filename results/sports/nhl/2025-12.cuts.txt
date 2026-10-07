@@ -1,0 +1,18 @@
+
+nhl/2025-12 · 561 scored pre-game positions · 39 games · 75 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              18     84     9   5-4     -6.6%                -3.0%     14u   -0.06
+      moneyline           8   5-3   win  62%  ROI   +5.0%  CLV  +0.13
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -1.50
+  B  hold>=1.5%, 90d P/L>=$100K                         15     85     9   5-4     -6.6%                -3.0%     14u   -0.06
+      moneyline           8   5-3   win  62%  ROI   +5.0%  CLV  +0.13
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -1.50
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            12     72     8   4-4    -14.5%                -7.6%     13u   +0.06
+      moneyline           7   4-3   win  57%  ROI   -2.3%  CLV  +0.29
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -1.50
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            8     66     7   3-4    -26.9%               -22.2%     11u   -0.07
+      moneyline           6   3-3   win  50%  ROI  -14.8%  CLV  +0.17
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -1.50
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            5     52     3   1-2    -42.5%               -31.0%      5u   -0.33
+      moneyline           2   1-1   win  50%  ROI  -13.8%  CLV  +0.25
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -1.50

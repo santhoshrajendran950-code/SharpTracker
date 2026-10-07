@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — closing-look window emails (timer)
+
+[Timer]
+OnCalendar=*-*-* 09..23:0/4
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,66 @@
+WINDOW 2026-08 · 39 positions · 11 games · 9 wallets · graded at T-60 price + 1.5pt vig
+TRAIN 6 games / TEST 5 games
+
+======================================================================================================================================================
+SIZING — DESCRIPTIVE, whole window
+  flat 1u (control)                        bets     3  (under 30, not scored)
+  s1  size-vs-typical ladder               bets     1  (under 30, not scored)
+  s2  + consensus steps                    bets     1  (under 30, not scored)
+  s3  + his sheet (NFL/total/longdog)      bets     1  (under 30, not scored)
+  s4  core/rest tiers (live)               bets     1  (under 30, not scored)
+
+======================================================================================================================================================
+SELECTION — DESCRIPTIVE, whole window
+  all qualifying (baseline)                bets     3  (under 30, not scored)
+  qualifying, conv >= 80                   bets     0  (under 30, not scored)
+  qualifying, price .45-.67                bets     0  (under 30, not scored)
+  qualifying, +150 or shorter (s4 gate)    bets     2  (under 30, not scored)
+  qualifying, favourites only (>.5)        bets     2  (under 30, not scored)
+  qualifying, dogs only (<.5)              bets     1  (under 30, not scored)
+  qualifying, moneylines                   bets     3  (under 30, not scored)
+  qualifying, spreads                      bets     0  (under 30, not scored)
+  qualifying, totals                       bets     0  (under 30, not scored)
+  qualifying, no totals                    bets     3  (under 30, not scored)
+  qualifying, hold >= 3%                   bets     3  (under 30, not scored)
+  qualifying, hold >= 5%                   bets     0  (under 30, not scored)
+  qualifying, stake >= $10K                bets     0  (under 30, not scored)
+  qualifying, stake >= $25K                bets     0  (under 30, not scored)
+  qualifying, 2x-5x their median           bets     0  (under 30, not scored)
+  qualifying, 5x+ their median             bets     0  (under 30, not scored)
+  qualifying, 15x+ their median            bets     0  (under 30, not scored)
+  qualifying, consensus >= 2               bets     0  (under 30, not scored)
+  qualifying, consensus >= 3               bets     0  (under 30, not scored)
+  qualifying, unopposed                    bets     1  (under 30, not scored)
+  qualifying, stacked (x2+)                bets     0  (under 30, not scored)
+  s4 CORE definition                       bets     0  (under 30, not scored)
+  his sheet: short price, no total, ML/spread bets     2  (under 30, not scored)
+  qualifying, MLB                          bets     0  (under 30, not scored)
+  qualifying, SOCCER                       bets     0  (under 30, not scored)
+  qualifying, ATP                          bets     0  (under 30, not scored)
+  qualifying, WTA                          bets     0  (under 30, not scored)
+  qualifying, NCAAF                        bets     3  (under 30, not scored)
+  qualifying, NFL                          bets     0  (under 30, not scored)
+
+======================================================================================================================================================
+WALLETS — DESCRIPTIVE, whole window
+  top 5 wallets by prior hold, $2.5K+      bets     9  (under 30, not scored)
+  top 10 wallets by prior hold, $2.5K+     bets    11  (under 30, not scored)
+  top 25 wallets by prior hold, $2.5K+     bets    11  (under 30, not scored)
+  top 5 wallets by prior P/L, $2.5K+       bets     5  (under 30, not scored)
+  top 10 wallets by prior P/L, $2.5K+      bets    11  (under 30, not scored)
+  top 25 wallets by prior P/L, $2.5K+      bets    11  (under 30, not scored)
+  every gated wallet, $2.5K+, no score     bets     3  (under 30, not scored)
+  hold >= 5% wallets, $2.5K+, no score     bets     1  (under 30, not scored)
+  trusted.json names, $2.5K+               bets     0  (under 30, not scored)
+
+======================================================================================================================================================
+TIMING — DESCRIPTIVE, whole window
+  qualifying, fresh (price within 10% of entry) bets     3  (under 30, not scored)
+  qualifying, stale                        bets     0  (under 30, not scored)
+  qualifying, market moved TOWARD them by T (>+2pt) bets     0  (under 30, not scored)
+  qualifying, market moved AGAINST them by T (<-2pt) bets     0  (under 30, not scored)
+  qualifying, price unchanged (+-2pt)      bets     3  (under 30, not scored)
+  at the sharp's ENTRY price instead (upper bound) bets     3  (under 30, not scored)
+
+======================================================================================================================================================
+VERDICT

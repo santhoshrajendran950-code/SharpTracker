@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — daily broad scan
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nightly
+WorkingDirectory=/opt/nightly-line
+ExecStart=/opt/nightly-line/deploy/scan-server.sh
+TimeoutStartSec=900

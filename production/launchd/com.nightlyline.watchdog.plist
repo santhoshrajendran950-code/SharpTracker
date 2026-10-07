@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.nightlyline.watchdog</string>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>/Users/santhosh/.nightly-line/watchdog.sh</string></array>
+  <key>StartInterval</key><integer>900</integer>
+  <key>WorkingDirectory</key><string>/Users/santhosh/.nightly-line</string>
+  <key>StandardOutPath</key><string>/Users/santhosh/.nightly-line/watchdog.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/santhosh/.nightly-line/watchdog.err.log</string>
+  <key>RunAtLoad</key><false/>
+</dict></plist>

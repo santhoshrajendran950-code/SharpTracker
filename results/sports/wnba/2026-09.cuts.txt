@@ -1,0 +1,8 @@
+
+wnba/2026-09 · 84 scored pre-game positions · 22 games · 13 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K               3     14     0     —
+  B  hold>=1.5%, 90d P/L>=$100K                          2     14     0     —
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled             1     14     0     —
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            1     14     0     —
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            1     14     0     —

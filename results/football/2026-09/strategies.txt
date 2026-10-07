@@ -1,0 +1,83 @@
+WINDOW 2026-09 · 3457 positions · 243 games · 269 wallets · graded at T-60 price + 1.5pt vig
+TRAIN 145 games / TEST 98 games
+
+======================================================================================================================================================
+SIZING — DESCRIPTIVE, whole window
+  flat 1u (control)                        bets   101 games    43 risked     101u net    -12.5u  ROI  -12.4%  CI [-32.6, +6.6]      maxDD   15.5u  worst run  7
+  s1  size-vs-typical ladder               bets    94 games    39 risked     147u net    -13.2u  ROI   -9.0%  CI [-31.7, +15.1]     maxDD   22.5u  worst run  6
+  s2  + consensus steps                    bets    94 games    39 risked     294u net    -35.0u  ROI  -11.9%  CI [-34.3, +9.1]      maxDD   45.4u  worst run  6
+  s3  + his sheet (NFL/total/longdog)      bets    94 games    39 risked     304u net    -36.5u  ROI  -12.0%  CI [-32.6, +8.3]      maxDD   44.6u  worst run  6
+  s4  core/rest tiers (live)               bets    94 games    39 risked     270u net    -28.4u  ROI  -10.5%  CI [-32.2, +10.6]     maxDD   38.8u  worst run  6
+
+SIZING — OUT OF SAMPLE: train picked 'flat 1u (control)' (-38.9% on train); its TEST result:
+  flat 1u (control)                        bets    66 games    24 risked      66u net     +1.1u  ROI   +1.7%  CI [-21.5, +23.9]     maxDD    8.8u  worst run  4
+
+======================================================================================================================================================
+SELECTION — DESCRIPTIVE, whole window
+  all qualifying (baseline)                bets   101 games    43 risked     101u net    -12.5u  ROI  -12.4%  CI [-32.3, +7.1]    
+  qualifying, conv >= 80                   bets    59 games    27 risked      59u net     -5.8u  ROI   -9.9%  CI [-39.2, +20.7]   
+  qualifying, price .45-.67                bets    70 games    36 risked      70u net     -9.9u  ROI  -14.2%  CI [-38.6, +7.9]    
+  qualifying, +150 or shorter (s4 gate)    bets    84 games    40 risked      84u net     -8.1u  ROI   -9.6%  CI [-31.0, +8.9]    
+  qualifying, favourites only (>.5)        bets    54 games    29 risked      54u net     +1.0u  ROI   +1.9%  CI [-24.8, +25.2]   
+  qualifying, dogs only (<.5)              bets    47 games    29 risked      47u net    -13.6u  ROI  -28.9%  CI [-63.3, +11.4]   
+  qualifying, moneylines                   bets    52 games    32 risked      52u net     -5.8u  ROI  -11.1%  CI [-36.3, +17.2]   
+  qualifying, spreads                      bets    29  (under 30, not scored)
+  qualifying, totals                       bets    20  (under 30, not scored)
+  qualifying, no totals                    bets    81 games    39 risked      81u net     -9.6u  ROI  -11.8%  CI [-33.7, +9.9]    
+  qualifying, hold >= 3%                   bets    84 games    36 risked      84u net    -12.0u  ROI  -14.3%  CI [-37.8, +7.6]    
+  qualifying, hold >= 5%                   bets    81 games    36 risked      81u net    -12.3u  ROI  -15.2%  CI [-38.4, +7.9]    
+  qualifying, stake >= $10K                bets    65 games    30 risked      65u net     -1.9u  ROI   -2.9%  CI [-29.8, +28.1]   
+  qualifying, stake >= $25K                bets    25  (under 30, not scored)
+  qualifying, 2x-5x their median           bets    29  (under 30, not scored)
+  qualifying, 5x+ their median             bets    15  (under 30, not scored)
+  qualifying, 15x+ their median            bets     5  (under 30, not scored)
+  qualifying, consensus >= 2               bets    91 games    35 risked      91u net    -13.3u  ROI  -14.6%  CI [-34.0, +3.9]    
+  qualifying, consensus >= 3               bets    81 games    27 risked      81u net    -12.2u  ROI  -15.1%  CI [-36.7, +5.8]    
+  qualifying, unopposed                    bets     8  (under 30, not scored)
+  qualifying, stacked (x2+)                bets     8  (under 30, not scored)
+  s4 CORE definition                       bets    37 games    21 risked      37u net     -4.0u  ROI  -10.9%  CI [-43.0, +20.8]   
+  his sheet: short price, no total, ML/spread bets    64 games    35 risked      64u net     -5.2u  ROI   -8.1%  CI [-29.8, +12.4]   
+  qualifying, MLB                          bets     0  (under 30, not scored)
+  qualifying, SOCCER                       bets     0  (under 30, not scored)
+  qualifying, ATP                          bets     0  (under 30, not scored)
+  qualifying, WTA                          bets     0  (under 30, not scored)
+  qualifying, NCAAF                        bets    19  (under 30, not scored)
+  qualifying, NFL                          bets    82 games    26 risked      82u net    -14.2u  ROI  -17.3%  CI [-40.7, +3.8]    
+
+SELECTION — OUT OF SAMPLE: train picked 'qualifying, +150 or shorter (s4 gate)' (-28.7% on train); its TEST result:
+  qualifying, +150 or shorter (s4 gate)    bets    54 games    21 risked      54u net     +0.5u  ROI   +1.0%  CI [-27.1, +22.4]   
+  (same test games, all qualifying (baseline)) bets    66 games    24 risked      66u net     +1.1u  ROI   +1.7%  CI [-21.3, +24.5]   
+
+======================================================================================================================================================
+WALLETS — DESCRIPTIVE, whole window
+  top 5 wallets by prior hold, $2.5K+      bets    23  (under 30, not scored)
+  top 10 wallets by prior hold, $2.5K+     bets    46 games    26 risked      46u net     +6.9u  ROI  +15.0%  CI [-20.5, +45.8]   
+  top 25 wallets by prior hold, $2.5K+     bets   112 games    46 risked     112u net     -8.8u  ROI   -7.9%  CI [-27.4, +15.3]   
+  top 5 wallets by prior P/L, $2.5K+       bets    38 games    31 risked      38u net     +4.2u  ROI  +11.0%  CI [-21.5, +48.2]   
+  top 10 wallets by prior P/L, $2.5K+      bets    48 games    35 risked      48u net     +0.9u  ROI   +1.8%  CI [-25.1, +33.3]   
+  top 25 wallets by prior P/L, $2.5K+      bets   127 games    47 risked     127u net    -19.5u  ROI  -15.3%  CI [-31.7, +2.6]    
+  every gated wallet, $2.5K+, no score     bets   101 games    43 risked     101u net    -12.5u  ROI  -12.4%  CI [-32.1, +7.5]    
+  hold >= 5% wallets, $2.5K+, no score     bets   234 games    63 risked     234u net    -21.9u  ROI   -9.3%  CI [-23.2, +4.8]    
+  trusted.json names, $2.5K+               bets     4  (under 30, not scored)
+
+WALLETS — OUT OF SAMPLE: train picked 'top 25 wallets by prior hold, $2.5K+' (-10.1% on train); its TEST result:
+  top 25 wallets by prior hold, $2.5K+     bets    63 games    23 risked      63u net     -3.9u  ROI   -6.1%  CI [-39.1, +28.6]   
+
+======================================================================================================================================================
+TIMING — DESCRIPTIVE, whole window
+  qualifying, fresh (price within 10% of entry) bets   100 games    42 risked     100u net    -11.5u  ROI  -11.5%  CI [-32.6, +8.4]    
+  qualifying, stale                        bets     1  (under 30, not scored)
+  qualifying, market moved TOWARD them by T (>+2pt) bets     3  (under 30, not scored)
+  qualifying, market moved AGAINST them by T (<-2pt) bets     4  (under 30, not scored)
+  qualifying, price unchanged (+-2pt)      bets    94 games    40 risked      94u net    -11.9u  ROI  -12.7%  CI [-33.3, +8.2]    
+  at the sharp's ENTRY price instead (upper bound) bets   101 games    43 risked     101u net    -13.1u  ROI  -13.0%  CI [-32.0, +6.1]    
+
+TIMING — OUT OF SAMPLE: train picked 'qualifying, fresh (price within 10% of entry)' (-37.1% on train); its TEST result:
+  qualifying, fresh (price within 10% of entry) bets    66 games    24 risked      66u net     +1.1u  ROI   +1.7%  CI [-20.7, +22.6]   
+
+======================================================================================================================================================
+VERDICT
+  SIZING     flat 1u (control)                            train  -38.9%  ->  test   +1.7% [-21.5, +23.9]  did not survive
+  SELECTION  qualifying, +150 or shorter (s4 gate)        train  -28.7%  ->  test   +1.0% [-27.1, +22.4]  did not survive
+  WALLETS    top 25 wallets by prior hold, $2.5K+         train  -10.1%  ->  test   -6.1% [-39.1, +28.6]  did not survive
+  TIMING     qualifying, fresh (price within 10% of entry) train  -37.1%  ->  test   +1.7% [-20.7, +22.6]  did not survive

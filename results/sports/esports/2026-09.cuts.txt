@@ -1,0 +1,8 @@
+
+esports/2026-09 · 6715 scored pre-game positions · 945 games · 387 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              63    955   104  67-37    +4.7%   [-12, +22]   +2.1%    160u   +0.05
+  B  hold>=1.5%, 90d P/L>=$100K                         46    522    98  62-36    +3.1%   [-14, +20]   +1.0%    154u   -0.05
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            52    931   101  64-37    +3.1%   [-14, +20]   +1.0%    158u   -0.07
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           35    502    97  61-36    +2.5%   [-15, +20]   +0.5%    154u   -0.16
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled           19    120    11   8-3    +15.8%   [-32, +59]  +23.4%     13u   +0.91

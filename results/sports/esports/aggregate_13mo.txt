@@ -1,0 +1,18 @@
+13 scored windows: ESPORTS/2025-09, ESPORTS/2025-10, ESPORTS/2025-11, ESPORTS/2025-12, ESPORTS/2026-01, ESPORTS/2026-02, ESPORTS/2026-03, ESPORTS/2026-04, ESPORTS/2026-05, ESPORTS/2026-06, ESPORTS/2026-07, ESPORTS/2026-08, ESPORTS/2026-09
+
+sport        cut                                              type           n      W-L   hit%  flat ROI         90% CI   s5 ROI  avg CLV
+ALL SPORTS   A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          461 298-163    65%     +5.9%      [-2, +14]    +3.0%    +0.20
+ALL SPORTS   B  hold>=1.5%, 90d P/L>=$100K                    ALL          392 253-139    65%     +5.7%      [-3, +14]    +3.4%    +0.14
+ALL SPORTS   C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          442 280-162    63%     +3.7%      [-5, +12]    +0.6%    +0.14
+ALL SPORTS   D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          355 229-126    65%     +5.6%      [-3, +14]    +3.6%    -0.01
+ALL SPORTS   E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          183 127-56     69%    +13.5%      [+2, +24]   +11.9%    +0.22
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          461 298-163    65%     +5.9%      [-2, +14]    +3.0%    +0.20
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    461 298-163    65%     +5.9%      [-2, +14]    +3.0%    +0.20
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    ALL          392 253-139    65%     +5.7%      [-3, +14]    +3.4%    +0.14
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    moneyline    392 253-139    65%     +5.7%      [-3, +14]    +3.4%    +0.14
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          442 280-162    63%     +3.7%      [-5, +12]    +0.6%    +0.14
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    442 280-162    63%     +3.7%      [-5, +12]    +0.6%    +0.14
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          355 229-126    65%     +5.6%      [-3, +14]    +3.6%    -0.01
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    355 229-126    65%     +5.6%      [-3, +14]    +3.6%    -0.01
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          183 127-56     69%    +13.5%      [+2, +24]   +11.9%    +0.22
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    183 127-56     69%    +13.5%      [+2, +24]   +11.9%    +0.22

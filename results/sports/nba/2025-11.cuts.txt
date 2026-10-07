@@ -1,0 +1,16 @@
+
+nba/2025-11 · 13240 scored pre-game positions · 196 games · 611 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              36    248    23   8-15   -42.6%    [-71, -9]  -45.9%     30u   -0.13
+      moneyline          21   8-13  win  38%  ROI  -37.2%  CLV  -0.02
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  -2.00
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -0.50
+  B  hold>=1.5%, 90d P/L>=$100K                         28    231    17   7-10   -31.6%    [-64, +8]  -37.7%     24u   -0.15
+      moneyline          16   7-9   win  44%  ROI  -27.3%  CLV  -0.03
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  -2.00
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            21    202    12   4-8    -44.4%    [-84, -2]  -52.0%     18u   -0.04
+      moneyline           9   3-6   win  33%  ROI  -45.0%  CLV  +0.22
+      spread              2   1-1   win  50%  ROI  -13.8%  CLV  -1.00
+      total               1   0-1   win   0%  ROI -100.0%  CLV  -0.50
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           13    175     6   2-4    -46.2%               -64.1%      9u   +0.00
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            8    167     6   2-4    -46.2%               -64.1%      9u   +0.00

@@ -1,0 +1,123 @@
+Cross-sport snapshot generated 2026-10-07 10:27:45 EDT — the all-sports run finished 2026-10-02 (see research/README.md); this is the complete table.
+
+99 scored windows: FOOTBALL/2025-09, FOOTBALL/2025-10, FOOTBALL/2025-11, FOOTBALL/2025-12, FOOTBALL/2026-01, FOOTBALL/2026-08, FOOTBALL/2026-09, CRICKET/2025-09, CRICKET/2025-10, CRICKET/2025-11, CRICKET/2025-12, CRICKET/2026-01, CRICKET/2026-02, CRICKET/2026-03, CRICKET/2026-04, CRICKET/2026-05, CRICKET/2026-06, CRICKET/2026-07, CRICKET/2026-08, CRICKET/2026-09, ESPORTS/2025-09, ESPORTS/2025-10, ESPORTS/2025-11, ESPORTS/2025-12, ESPORTS/2026-01, ESPORTS/2026-02, ESPORTS/2026-03, ESPORTS/2026-04, ESPORTS/2026-05, ESPORTS/2026-06, ESPORTS/2026-07, ESPORTS/2026-08, ESPORTS/2026-09, MLB/2025-09, MLB/2025-10, MLB/2026-03, MLB/2026-04, MLB/2026-05, MLB/2026-06, MLB/2026-07, MLB/2026-08, MLB/2026-09, NBA/2025-10, NBA/2025-11, NBA/2025-12, NBA/2026-01, NBA/2026-02, NBA/2026-03, NBA/2026-04, NBA/2026-05, NHL/2025-10, NHL/2025-11, NHL/2025-12, NHL/2026-01, NHL/2026-02, NHL/2026-03, NHL/2026-04, NHL/2026-05, RUGBY/2026-01, RUGBY/2026-02, RUGBY/2026-03, RUGBY/2026-04, RUGBY/2026-05, RUGBY/2026-06, RUGBY/2026-08, RUGBY/2026-09, SOCCER/2025-09, SOCCER/2025-10, SOCCER/2025-11, SOCCER/2025-12, SOCCER/2026-01, SOCCER/2026-02, SOCCER/2026-03, SOCCER/2026-04, SOCCER/2026-05, SOCCER/2026-06, SOCCER/2026-07, SOCCER/2026-08, SOCCER/2026-09, TENNIS/2025-09, TENNIS/2025-10, TENNIS/2025-11, TENNIS/2025-12, TENNIS/2026-01, TENNIS/2026-02, TENNIS/2026-03, TENNIS/2026-04, TENNIS/2026-05, TENNIS/2026-06, TENNIS/2026-07, TENNIS/2026-08, TENNIS/2026-09, WNBA/2025-09, WNBA/2025-10, WNBA/2026-05, WNBA/2026-06, WNBA/2026-07, WNBA/2026-08, WNBA/2026-09
+
+sport        cut                                              type           n      W-L   hit%  flat ROI         90% CI   s5 ROI  avg CLV
+ALL SPORTS   A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL         1869 1098-771    59%     -2.7%       [-7, +1]    -3.7%    +0.04
+ALL SPORTS   B  hold>=1.5%, 90d P/L>=$100K                    ALL         1627 954-673    59%     -2.9%       [-7, +2]    -4.0%    +0.04
+ALL SPORTS   C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL         1594 925-669    58%     -4.0%       [-9, +0]    -5.3%    +0.04
+ALL SPORTS   D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL         1313 778-535    59%     -2.0%       [-7, +3]    -3.5%    +0.02
+ALL SPORTS   E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          819 499-320    61%     +0.6%       [-4, +6]    -1.8%    +0.13
+CRICKET      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      B  hold>=1.5%, 90d P/L>=$100K                    ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      B  hold>=1.5%, 90d P/L>=$100K                    moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL            1   1-0     100%    +75.4%                  +75.4%    +2.00
+CRICKET      E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline      1   1-0     100%    +75.4%                  +75.4%    +2.00
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          461 298-163    65%     +5.9%      [-2, +14]    +3.0%    +0.20
+ESPORTS      A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    461 298-163    65%     +5.9%      [-2, +14]    +3.0%    +0.20
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    ALL          392 253-139    65%     +5.7%      [-3, +14]    +3.4%    +0.14
+ESPORTS      B  hold>=1.5%, 90d P/L>=$100K                    moneyline    392 253-139    65%     +5.7%      [-3, +14]    +3.4%    +0.14
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          442 280-162    63%     +3.7%      [-5, +12]    +0.6%    +0.14
+ESPORTS      C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    442 280-162    63%     +3.7%      [-5, +12]    +0.6%    +0.14
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          355 229-126    65%     +5.6%      [-3, +14]    +3.6%    -0.01
+ESPORTS      D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    355 229-126    65%     +5.6%      [-3, +14]    +3.6%    -0.01
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          183 127-56     69%    +13.5%      [+2, +24]   +11.9%    +0.22
+ESPORTS      E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    183 127-56     69%    +13.5%      [+2, +24]   +11.9%    +0.22
+FOOTBALL     A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          238 133-105    56%     -7.4%      [-19, +4]   -11.7%    +0.16
+FOOTBALL     A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    238 133-105    56%     -7.4%      [-19, +4]   -11.7%    +0.16
+FOOTBALL     B  hold>=1.5%, 90d P/L>=$100K                    ALL          216 117-99     54%    -10.3%      [-23, +2]   -15.2%    +0.17
+FOOTBALL     B  hold>=1.5%, 90d P/L>=$100K                    moneyline    216 117-99     54%    -10.3%      [-23, +2]   -15.2%    +0.17
+FOOTBALL     C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          193 105-88     54%     -9.9%      [-22, +3]   -15.3%    +0.15
+FOOTBALL     C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    193 105-88     54%     -9.9%      [-22, +3]   -15.3%    +0.15
+FOOTBALL     D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          159  87-72     55%     -9.6%      [-23, +3]   -15.4%    +0.13
+FOOTBALL     D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    159  87-72     55%     -9.6%      [-23, +3]   -15.4%    +0.13
+FOOTBALL     E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          113  60-53     53%    -12.4%      [-27, +3]   -18.2%    +0.29
+FOOTBALL     E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    113  60-53     53%    -12.4%      [-27, +3]   -18.2%    +0.29
+MLB          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          355 204-151    57%     -4.1%      [-13, +5]    -3.2%    +0.04
+MLB          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    318 180-138    57%     -5.9%      [-16, +4]    -4.5%    +0.02
+MLB          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         spread        11   7-4      64%     +7.7%     [-38, +52]    +9.7%    +0.18
+MLB          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         total         26  17-9      65%    +12.5%     [-14, +39]   +22.5%    +0.17
+MLB          B  hold>=1.5%, 90d P/L>=$100K                    ALL          324 184-140    57%     -5.0%      [-14, +5]    -3.5%    +0.02
+MLB          B  hold>=1.5%, 90d P/L>=$100K                    moneyline    290 162-128    56%     -6.9%      [-17, +3]    -5.0%    -0.00
+MLB          B  hold>=1.5%, 90d P/L>=$100K                    spread        10   6-4      60%     +2.9%     [-48, +39]    +6.1%    +0.20
+MLB          B  hold>=1.5%, 90d P/L>=$100K                    total         24  16-8      67%    +14.6%     [-13, +42]   +28.0%    +0.15
+MLB          C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          298 172-126    58%     -3.7%      [-13, +6]    -2.8%    +0.04
+MLB          C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    267 150-117    56%     -6.6%      [-17, +3]    -4.6%    +0.03
+MLB          C  hold>=3%,   90d P/L>=$50K, >=30 settled       spread        10   7-3      70%    +18.5%     [-17, +54]   +18.2%    +0.10
+MLB          C  hold>=3%,   90d P/L>=$50K, >=30 settled       total         21  15-6      71%    +23.0%      [-3, +48]   +30.7%    +0.21
+MLB          D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          271 155-116    57%     -4.6%      [-14, +6]    -3.5%    +0.02
+MLB          D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    243 135-108    56%     -7.7%      [-18, +3]    -5.5%    +0.00
+MLB          D  hold>=3%,   90d P/L>=$100K, >=50 settled      spread         9   6-3      67%    +14.3%     [-24, +54]   +15.0%    +0.11
+MLB          D  hold>=3%,   90d P/L>=$100K, >=50 settled      total         19  14-5      74%    +26.7%      [-1, +54]   +37.9%    +0.18
+MLB          E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          160  93-67     58%     -3.4%     [-16, +10]    -4.6%    -0.00
+MLB          E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    145  84-61     58%     -4.1%     [-18, +10]    -4.9%    -0.03
+MLB          E  hold>=5%,   90d P/L>=$100K, >=50 settled      spread         5   2-3      40%    -32.8%                  -44.0%    +0.20
+MLB          E  hold>=5%,   90d P/L>=$100K, >=50 settled      total         10   7-3      70%    +21.3%     [-14, +57]   +38.5%    +0.25
+NBA          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          465 255-210    55%     -8.2%      [-17, +1]    -9.3%    -0.10
+NBA          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    320 165-155    52%    -14.6%      [-27, -3]   -13.3%    -0.22
+NBA          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         spread        73  41-32     56%     -3.9%     [-22, +16]    -4.2%    +0.16
+NBA          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         total         72  49-23     68%    +16.1%      [-4, +33]   +21.5%    +0.18
+NBA          B  hold>=1.5%, 90d P/L>=$100K                    ALL          406 225-181    55%     -7.3%      [-16, +3]    -9.3%    -0.02
+NBA          B  hold>=1.5%, 90d P/L>=$100K                    moneyline    281 145-136    52%    -14.6%      [-26, -2]   -13.1%    -0.14
+NBA          B  hold>=1.5%, 90d P/L>=$100K                    spread        59  33-26     56%     -4.5%     [-25, +15]    -7.6%    +0.25
+NBA          B  hold>=1.5%, 90d P/L>=$100K                    total         66  47-19     71%    +21.4%      [+2, +40]   +25.2%    +0.26
+NBA          C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          388 214-174    55%     -7.8%      [-17, +2]    -8.7%    -0.10
+NBA          C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    260 136-124    52%    -13.5%      [-27, -1]   -11.5%    -0.22
+NBA          C  hold>=3%,   90d P/L>=$50K, >=30 settled       spread        61  34-27     56%     -4.7%     [-25, +15]    -8.6%    +0.13
+NBA          C  hold>=3%,   90d P/L>=$50K, >=30 settled       total         67  44-23     66%    +11.9%      [-8, +29]   +17.4%    +0.16
+NBA          D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          320 182-138    57%     -5.0%      [-14, +5]    -8.1%    -0.03
+NBA          D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    208 110-98     53%    -12.8%      [-27, +0]   -12.0%    -0.17
+NBA          D  hold>=3%,   90d P/L>=$100K, >=50 settled      spread        52  29-23     56%     -5.0%     [-27, +16]    -9.2%    +0.24
+NBA          D  hold>=3%,   90d P/L>=$100K, >=50 settled      total         60  43-17     72%    +22.0%      [+3, +41]   +26.3%    +0.20
+NBA          E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL          242 142-100    59%     -2.0%      [-12, +8]    -4.7%    +0.03
+NBA          E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline    146  81-65     55%     -8.6%      [-22, +6]    -8.1%    -0.13
+NBA          E  hold>=5%,   90d P/L>=$100K, >=50 settled      spread        45  25-20     56%     -5.4%     [-26, +14]    -8.0%    +0.40
+NBA          E  hold>=5%,   90d P/L>=$100K, >=50 settled      total         51  36-15     71%    +19.9%      [-1, +40]   +23.8%    +0.19
+NHL          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL           96  54-42     56%     -7.2%      [-24, +8]    -1.2%    -0.22
+NHL          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline     88  50-38     57%     -6.3%     [-23, +12]    +0.2%    -0.10
+NHL          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         spread         4   3-1      75%    +24.7%                   +8.8%    -2.75
+NHL          A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         total          4   1-3      25%    -58.3%                  -76.2%    -0.37
+NHL          B  hold>=1.5%, 90d P/L>=$100K                    ALL           83  47-36     57%     -6.7%     [-25, +13]    -0.4%    -0.28
+NHL          B  hold>=1.5%, 90d P/L>=$100K                    moneyline     78  45-33     58%     -5.1%     [-22, +15]    +1.6%    -0.15
+NHL          B  hold>=1.5%, 90d P/L>=$100K                    spread         3   2-1      67%    +15.0%                  -13.8%    -3.33
+NHL          B  hold>=1.5%, 90d P/L>=$100K                    total          2   0-2       0%   -100.0%                 -100.0%    -0.75
+NHL          C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL           83  47-36     57%     -6.8%     [-25, +14]    +0.0%    -0.28
+NHL          C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline     77  45-32     58%     -3.7%     [-23, +16]    +2.8%    -0.10
+NHL          C  hold>=3%,   90d P/L>=$50K, >=30 settled       spread         2   1-1      50%    -23.1%                  -23.1%    -7.00
+NHL          C  hold>=3%,   90d P/L>=$50K, >=30 settled       total          4   1-3      25%    -58.3%                  -76.2%    -0.37
+NHL          D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL           65  37-28     57%     -6.7%     [-28, +15]    +0.2%    -0.22
+NHL          D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline     63  37-26     59%     -3.7%     [-24, +19]    +2.1%    -0.20
+NHL          D  hold>=3%,   90d P/L>=$100K, >=50 settled      total          2   0-2       0%   -100.0%                 -100.0%    -0.75
+NHL          E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL           26  18-8      69%    +13.3%     [-13, +38]   +20.1%    -0.27
+NHL          E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline     25  18-7      72%    +17.8%      [-9, +44]   +22.9%    -0.22
+NHL          E  hold>=5%,   90d P/L>=$100K, >=50 settled      total          1   0-1       0%   -100.0%                 -100.0%    -1.50
+SOCCER       A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL          247 151-96     61%     +0.5%     [-13, +13]    +2.5%    -0.01
+SOCCER       A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline    247 151-96     61%     +0.5%     [-13, +13]    +2.5%    -0.01
+SOCCER       B  hold>=1.5%, 90d P/L>=$100K                    ALL          199 125-74     63%     +3.1%     [-12, +17]    +5.4%    +0.02
+SOCCER       B  hold>=1.5%, 90d P/L>=$100K                    moneyline    199 125-74     63%     +3.1%     [-12, +17]    +5.4%    +0.02
+SOCCER       C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL          184 104-80     57%     -7.5%      [-22, +7]    -6.2%    +0.08
+SOCCER       C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline    184 104-80     57%     -7.5%      [-22, +7]    -6.2%    +0.08
+SOCCER       D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL          138  85-53     62%     +0.8%     [-15, +14]    +3.3%    +0.16
+SOCCER       D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline    138  85-53     62%     +0.8%     [-15, +14]    +3.3%    +0.16
+SOCCER       E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL           90  56-34     62%     +1.4%     [-17, +20]    +3.0%    +0.31
+SOCCER       E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline     90  56-34     62%     +1.4%     [-17, +20]    +3.0%    +0.31
+WNBA         A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         ALL            6   2-4      33%    -44.1%                  -58.1%    -0.50
+WNBA         A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         moneyline      3   1-2      33%    -41.5%                  -64.9%    -0.33
+WNBA         A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K         spread         3   1-2      33%    -46.7%                  -46.7%    -0.67
+WNBA         B  hold>=1.5%, 90d P/L>=$100K                    ALL            6   2-4      33%    -44.1%                  -58.1%    -0.50
+WNBA         B  hold>=1.5%, 90d P/L>=$100K                    moneyline      3   1-2      33%    -41.5%                  -64.9%    -0.33
+WNBA         B  hold>=1.5%, 90d P/L>=$100K                    spread         3   1-2      33%    -46.7%                  -46.7%    -0.67
+WNBA         C  hold>=3%,   90d P/L>=$50K, >=30 settled       ALL            5   2-3      40%    -32.9%                  -52.1%    -0.20
+WNBA         C  hold>=3%,   90d P/L>=$50K, >=30 settled       moneyline      3   1-2      33%    -41.5%                  -64.9%    -0.33
+WNBA         C  hold>=3%,   90d P/L>=$50K, >=30 settled       spread         2   1-1      50%    -20.0%                  -20.0%    +0.00
+WNBA         D  hold>=3%,   90d P/L>=$100K, >=50 settled      ALL            4   2-2      50%    -16.1%                  -44.1%    -0.13
+WNBA         D  hold>=3%,   90d P/L>=$100K, >=50 settled      moneyline      3   1-2      33%    -41.5%                  -64.9%    -0.33
+WNBA         D  hold>=3%,   90d P/L>=$100K, >=50 settled      spread         1   1-0     100%    +60.0%                  +60.0%    +0.50
+WNBA         E  hold>=5%,   90d P/L>=$100K, >=50 settled      ALL            4   2-2      50%    -16.1%                  -44.1%    -0.13
+WNBA         E  hold>=5%,   90d P/L>=$100K, >=50 settled      moneyline      3   1-2      33%    -41.5%                  -64.9%    -0.33
+WNBA         E  hold>=5%,   90d P/L>=$100K, >=50 settled      spread         1   1-0     100%    +60.0%                  +60.0%    +0.50

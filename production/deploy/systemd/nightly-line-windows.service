@@ -1,0 +1,13 @@
+[Unit]
+Description=Nightly Line — closing-look window emails
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nightly
+WorkingDirectory=/opt/nightly-line
+EnvironmentFile=/opt/nightly-line/deploy/nightly-line.env
+ExecStart=/opt/nightly-line/run-windows.sh
+# a stuck run must never overlap the next timer fire
+TimeoutStartSec=300

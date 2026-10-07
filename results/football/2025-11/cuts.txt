@@ -1,0 +1,8 @@
+
+2025-11 · 9373 scored pre-game positions · 297 games · 484 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              39    674    66  38-28    -4.2%   [-25, +19]  -11.1%    134u   +0.61
+  B  hold>=1.5%, 90d P/L>=$100K                         29    604    54  29-25   -11.0%   [-33, +13]  -15.3%    112u   +0.81
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            24    588    51  27-24   -12.0%   [-34, +13]  -18.3%    108u   +0.79
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           14    489    33  17-16   -13.7%   [-41, +14]  -21.4%     68u   +1.20
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled           10    383    26  12-14   -23.1%    [-52, +7]  -31.0%     55u   +0.79

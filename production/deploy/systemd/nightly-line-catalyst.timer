@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — catalyst alert (macro) (timer)
+
+[Timer]
+OnCalendar=*-*-* 08..23:0/15
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

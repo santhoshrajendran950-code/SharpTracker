@@ -1,0 +1,13 @@
+[Unit]
+Description=Nightly Line — MLB-timed X board
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nightly
+WorkingDirectory=/opt/nightly-line
+EnvironmentFile=/opt/nightly-line/deploy/nightly-line.env
+ExecStart=/usr/bin/python3 /opt/nightly-line/xboard-mlb.py
+# a stuck run must never overlap the next timer fire
+TimeoutStartSec=600
