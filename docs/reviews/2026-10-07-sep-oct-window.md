@@ -33,14 +33,13 @@ Signal CLV (close − sharp's entry) is **−2.02 pts** over 1,391 priced
 suggestions, and it gets worse the shorter the favourite: −122..−150 −1.5,
 −150..−180 −4.7, −180..−300 −7.0, shorter than −300 −14.7. Only underdogs show
 positive CLV (+2.1 pts) and they lose outright (37% hit). Published picks
-show **+1.58 pts** only because `pickclv.py` measures the *book* price
-Santhosh took against the Polymarket close: the books were offering better
-prices than Polymarket's close. That is a real, repeatable edge in **price
-shopping**, and it is not the sharp-money signal. The KPI as defined (CLV on
-published picks) is therefore measuring the book spread, not the model.
-**Improvement:** report both CLVs on every pick — vs the sharp's entry and
-vs the book — and set the KPI on the first. If signal CLV stays negative, the
-product is a line-shopping tool, which is a different (and honest) pitch.
+show **+1.58 pts** because `pickclv.py` measures the *book* price Santhosh
+took against the Polymarket close. Backfilled against the sharp's own entry,
+the same 60 picks are **+0.03 pts (52% beat)**: on the picks, the signal sits
+exactly at the close, and the +1.6 is the book spread — a real, repeatable
+edge in **price shopping**, not in the signal. The KPI as defined was
+measuring the book spread. **Done 2026-10-07:** both CLVs are now stored on
+every pick and printed everywhere; the KPI is the signal CLV.
 
 ### 2. The overrides turned a 31-15 rule into a 32-33 record.
 Published picks split: default window **20-14 (+28%)**, override **12-19
@@ -130,5 +129,5 @@ picks were 3-9.
 | 6 | MLB alert-only | −13.4% [−24, −2] n=219 live, −17.1% research Sep | one more month |
 | 7 | Trader share cap on the board | descriptive | design |
 
-None of these are installed. Santhosh decides; `docs/alert-rules.md` and the
+Rows 1–4 were installed 2026-10-07 on Santhosh's go-ahead (see the ledger). The rest wait; `docs/alert-rules.md` and the
 ledger get the entry when he does.

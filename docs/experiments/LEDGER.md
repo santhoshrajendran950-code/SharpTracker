@@ -98,7 +98,7 @@ picks +2.4% flat, −17% sized. Research rebuild of Sep: football −22%, MLB �
 
 - **EXP-020 bar met:** pick'em band 58-66, −12.1% [−26, +2] on 86 games; override picks 12-19. Recommendation: retire `price_min`.
 - **EXP-022 strengthened:** 80–89 band −19.3% [−38, −1] on 842 v4 rows; 90+ second worst; sized picks 19u behind flat. Recommendation: flat 1u.
-- **New finding — pick CLV is the book's, not the signal's.** `pickclv.py` measures book price vs Polymarket close (+1.58); close vs the sharp's entry is −2.02 on the same games. The KPI is measuring line shopping. Instrumentation change: record both.
+- **New finding — pick CLV is mostly the book's.** `pickclv.py` measured book price vs Polymarket close (+1.58). Backfilled the same 60 picks against the sharp's entry: **+0.03 pts, 52% beat** — the signal sits at the close and the +1.6 is the book spread. (Across *all* 1,391 suggestions the signal CLV is −2.02.) Both are now recorded (`clv`, `clv_entry`); KPI moved to the signal CLV.
 
 ### EXP-026 — Fresh bonus and stale penalty have the wrong sign; $10–25K wager tier over-scored
 - **Status:** proposed · **Rule:** v4 points (`check.py`: fresh +10; `units.py`: stale −1u; wager $10K tier 35 pts)
@@ -112,3 +112,14 @@ picks +2.4% flat, −17% sized. Research rebuild of Sep: football −22%, MLB �
 ### EXP-028 — MLB alert-only
 - **Status:** proposed · **Prior:** live MLB −13.4% [−24, −2] n=219; picks 3-9; research Sep −17.1%, 13-month MLB −4.1%
 - **Test:** one more live month; pass if the live interval still excludes zero.
+
+## Adopted 2026-10-07 (Santhosh: "implement this logic within big board and the sends to X and email")
+
+| EXP | Change | Where |
+|---|---|---|
+| 020 | `price_min` overrides retired (Kch-Temp, BrotherObama) | `trusted.json` → `price_min_retired`; `form.price_window` unchanged |
+| 022 | **s6 flat**: 1u every graded pick, ½u through a `price_max` override | `units.py` `FLAT`, `OVERRIDE_UNITS`, `SIZING_VERSION="s6"` |
+| 027 | Contested rule: `opposed ≥ 1` → no pick, not emailed, board shows `contested` + `CONTESTED:n` | `picks.contested/qualifies`, `check.py --alert`, `bigboard.py` |
+| — | Dual CLV: `clv_entry` (vs sharp's entry) beside `clv` (vs book) on every pick; KPI = signal CLV | `pickclv.py`, `picks.py --record` (results card line left for Santhosh) |
+
+Not installed, on purpose: EXP-026 (fresh/stale, $10–25K tier — research windows first), EXP-028 (MLB alert-only — one more month), trader share cap (design only).

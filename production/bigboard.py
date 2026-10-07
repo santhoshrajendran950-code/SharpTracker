@@ -342,6 +342,8 @@ def main():
                 flags.append("BOTH SIDES — hedger")
             elif h.get("hedged"):
                 flags.append("mixed sides, no stack credit")
+            if (h.get("opposed") or 0) >= 1:
+                flags.append(f"CONTESTED — {h['opposed']} tracked sharp(s) on the other side, no play")
             mp = h.get("month_pnl")
             vt = h.get("vs_typical")
             print(f"[{h['conv']:.0f}]  {k(h['stake'])} on {play_text(h)}  {chk.am(h['entry'])}")
@@ -367,6 +369,8 @@ def main():
     import units as _U
     for h in rows:
         _, size = _U.public_size(h)
+        if (h.get("opposed") or 0) >= 1 and size != "—":
+            size = "contested"      # EXP-027: another tracked sharp is on the other side
         base = (f"{h['conv']:.0f}|{size}|{chk.m0(h['stake'])}|{play_text(h)}|{chk.am(h['entry'])}"
                 f"|{game_text(h)}|{start_text(h, now)}")
         if not wide:
@@ -385,6 +389,10 @@ def main():
             flags.append("BOOK")
         elif h.get("hedged"):
             flags.append("mixed")
+        if (h.get("opposed") or 0) >= 1:
+            flags.append(f"CONTESTED:{h['opposed']}")
+        if (h.get("consensus") or 1) >= 2:
+            flags.append(f"{h['consensus']}sharps")
         vt = h.get("vs_typical")
         vs = (f"{vt:.1f}x (med {chk.m0(h['typical'])}, n={h['n_open']})"
               if vt else "—")

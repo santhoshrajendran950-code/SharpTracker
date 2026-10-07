@@ -112,12 +112,23 @@ MAX_REST_PER_DAY = 4     # non-core picks per day; core plays are never capped
                          # by count — "a few strong opinions a day", not volume
 
 
+def contested(h):
+    """A qualifying sharp is on the OTHER side of this lean in the same game
+    (check.mark_consensus `opposed`). 2026-10-07: 18% of suggested markets in
+    the Sep-Oct window had both sides shown and 39% of suggestions sat on one;
+    a call that another tracked wallet is fading is not a call. Same logic
+    passes() already applies to one wallet's two-sided book. EXP-027."""
+    return (h.get("opposed") or 0) >= 1
+
+
 def qualifies(h):
     if (h.get("conv") or 0) < MIN_CONV:
         return False, f"below {MIN_CONV:.0f}"
     import bigboard as B
     if B.period(h.get("market")):
         return False, "period market — cannot be settled"
+    if contested(h):
+        return False, f"contested — {h.get('opposed')} sharp(s) on the other side"
     e = h.get("entry") or 0
     try:
         import form
@@ -374,6 +385,9 @@ def record(days=None):
              f"{net:+7.2f}u  ROI {anon.roi(net/risk*100) if risk else '—':>5}  {games:3} games")
         if clv:
             s += f"  CLV {sum(clv)/len(clv):+.2f} pts, beat close {beat}/{len(clv)}"
+        ce = [p["clv_entry"] for p, _ in prs if p.get("clv_entry") is not None]
+        if ce:
+            s += f"  signal CLV {sum(ce)/len(ce):+.2f}"
         return s
 
     out = [f"PICKS LEDGER · {'last %dd' % days if days else 'all time'} · {len(rows)} graded"]

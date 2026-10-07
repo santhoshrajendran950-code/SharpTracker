@@ -15,6 +15,12 @@ clv    = close - implied(book odds taken), in percentage points. The book price
          INCLUDES its vig, so a follower who merely matches the market's close
          shows slightly negative CLV here. That is the right accounting: it is
          what they actually paid.
+clv_entry = close - the sharp's own entry price (2026-10-07). This is the
+         SIGNAL's closing-line value; `clv` is the book's. Over Sep 10-Oct 6
+         the picks' clv was +1.6 pts while clv_entry on the same games was
+         about -2: the books were offering better prices than Polymarket's
+         close, and the sharps' entries were not beating the close. Both are
+         reported everywhere so the two are never confused again.
 """
 import json, os, sys, statistics as st
 from datetime import datetime
@@ -69,7 +75,13 @@ def fill():
             continue
         p["close"] = round(c, 4)
         p["clv"] = round((c - implied(p["odds"])) * 100, 2)
+        if p.get("sharp_entry"):
+            p["clv_entry"] = round((c - p["sharp_entry"]) * 100, 2)
         n += 1
+    # backfill clv_entry on rows that already have a close (no fetch needed)
+    for p in rows:
+        if p.get("close") and p.get("sharp_entry") and p.get("clv_entry") is None:
+            p["clv_entry"] = round((p["close"] - p["sharp_entry"]) * 100, 2); n += 1
     if n:
         tmp = picks.PICKS + ".tmp"
         with open(tmp, "w") as f:
@@ -86,16 +98,21 @@ def summary(rows):
     c = [p["clv"] for p in v]
     beat = sum(1 for x in c if x > 0)
     core = [p["clv"] for p in v if p.get("tier") == "core"]
+    e = [p["clv_entry"] for p in v if p.get("clv_entry") is not None]
     return {"n": len(v), "mean": st.mean(c), "beat": beat / len(v),
-            "core_n": len(core), "core_mean": st.mean(core) if core else None}
+            "core_n": len(core), "core_mean": st.mean(core) if core else None,
+            "entry_n": len(e), "entry_mean": st.mean(e) if e else None,
+            "entry_beat": (sum(1 for x in e if x > 0) / len(e)) if e else None}
 
 
 def line(s):
     if not s:
         return "CLV: no priced picks yet"
-    out = f"CLV {s['mean']:+.2f} pts over {s['n']} picks · beat close {s['beat']:.0%}"
+    out = f"CLV vs book {s['mean']:+.2f} pts over {s['n']} picks · beat close {s['beat']:.0%}"
     if s["core_n"]:
         out += f" · core {s['core_mean']:+.2f} ({s['core_n']})"
+    if s.get("entry_n"):
+        out += f" · signal CLV (vs sharp's entry) {s['entry_mean']:+.2f} pts, beat {s['entry_beat']:.0%} ({s['entry_n']})"
     return out
 
 

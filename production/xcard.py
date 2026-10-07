@@ -394,7 +394,9 @@ def build_results(day_rows, all_rows, day, pl):
         import pickclv
         cs = pickclv.summary(all_rows)
         if cs:
-            clv_html = f'<br>CLV <b>{cs["mean"]:+.1f} pts</b> · beat close <b>{cs["beat"]:.0%}</b> ({cs["n"]})'
+            clv_html = f'<br>CLV vs book <b>{cs["mean"]:+.1f} pts</b> · beat close <b>{cs["beat"]:.0%}</b> ({cs["n"]})'
+            if cs.get("entry_n"):
+                clv_html += f'<br>signal CLV <b>{cs["entry_mean"]:+.1f} pts</b> ({cs["entry_n"]})'
     except Exception:
         pass
     order = sorted(zip(rows, vals), key=lambda t: -abs(t[1]))

@@ -5,7 +5,7 @@ alert, a board row, or a graded public pick, with the evidence it was set on
 and the date. This is the file to change when a rule changes; the experiment
 that justifies the change goes in [`experiments/LEDGER.md`](experiments/LEDGER.md).
 
-Numbers are as of **2026-10-07**. Constants live in `production/check.py`,
+Numbers are as of **2026-10-07** (rules changed the same day — see the ledger's 2026-10-07 adoption entry). Constants live in `production/check.py`,
 `production/units.py`, `production/picks.py`, `production/form.py`.
 
 ## 0. The pipeline in one line
@@ -82,13 +82,23 @@ Live, 2026-10-07: default-window picks 20-14, +28% [−15, +84] on 29 games;
 Rejected: −150 cap (2026-09-23, one day), +150..−180 "favourites and
 pick'em" window (no feature orders it).
 
+## 4a. Contested markets — no play (2026-10-07, EXP-027)
+
+If another qualifying sharp is on the **other side** of the same lean in the
+same game (`opposed ≥ 1` from `check.mark_consensus`), the row is not a pick,
+is not emailed, and the board shows `contested` in the Size column with a
+`CONTESTED:n` flag. Evidence: in the Sep–Oct window 18% of suggested markets
+had both sides shown and 39% of suggestions sat on one. Descriptive rule, same
+logic `passes()` already applies to one wallet's two-sided book; its effect is
+measured by the `contested` cut in `research/eval_window.py`.
+
 ## 5. Exceptions for people — `form.price_window()` and `trusted.json`
 
 | Trader | Override | Set from | Status |
 |---|---|---|---|
-| Kch-Temp | `price_min` 0.50 — pick'em allowed | his own 32 settled signals: pick'em..−122 was 17-9 (+29%) | **contradicted live**: pick'em band now 10-19, −33% [−60, −6] on 29 games; all override picks 12-19, −26% [−54, +1]. EXP-020. |
-| justaluckydude | `price_max` 0.90 — favourites to ~−900 | 15-0 across every favourite band | too few live picks to judge |
-| CandleHammerDrums | `price_max` 0.90 | 12-2 on favourites, 0-2 on dogs | too few live picks to judge |
+| Kch-Temp, BrotherObama | `price_min` 0.50 — pick'em allowed | own settled signals in the pick'em band | **RETIRED 2026-10-07** (EXP-020): pick'em band 58-66, −12.1% [−26, +2] on 86 games; override picks 12-19. Kept in `trusted.json` as `price_min_retired`. |
+| justaluckydude | `price_max` 0.75 — favourites to −300 | 15-0 across every favourite band | kept at **½u** (s6 `OVERRIDE_UNITS`) until 40 games; in-window 15-4 live but −8 pts signal CLV |
+| CandleHammerDrums | `price_max` 0.75 | 12-2 on favourites, 0-2 on dogs | same |
 | Soarin22, GrizzliesSuck | declined | 6 and 10 signals — too thin | — |
 
 Every override pick is stamped `price_override: true` so it is judged apart.
@@ -98,7 +108,17 @@ is the same sample that seeded `trusted.json`.
 Ledger form (`form.py`): a trader with ≥ **20** graded games at ROI ≤ **−15%**
 is cut; ≥ +15% gets a size bump. Nobody has crossed the cold line yet.
 
-## 6. Size — s5 (`units.py`, `SIZING_VERSION = "s5"`, 2026-09-23; s5.1 2026-09-28)
+## 6. Size — s6 FLAT (`units.py`, `SIZING_VERSION = "s6"`, `FLAT = True`, 2026-10-07)
+
+**Every graded pick is 1u.** A pick that publishes through a `price_max`
+override is ½u. Core/rest tiering (80+) survives only for the 4-rest-picks-a-day
+cap. Evidence (EXP-022): sized trailed flat on the live ledger (−17% vs +2.4%,
+19u), in all seven out-of-sample football months, and in the Sep 2026 rebuild
+(−27.3% vs −22.0%); the 90+ band took the largest units and went 19-26 while
+70–79 went 8-2 at the smallest. Five sizing versions never beat flat out of
+sample. `FLAT = False` replays s5 for backtests.
+
+### s5, for the record (2026-09-23 → 2026-10-07)
 
 | Step | Rule |
 |---|---|
@@ -139,12 +159,17 @@ shallower drawdown. Live: sized −12% vs flat −1.5% on v4/s5 picks.
 | 2026-10-07 | |
 |---|---|
 | v4/s5 picks graded | 51 / 200 |
-| mean CLV | +2.07 pts (± 0.88 at 90%), 38/51 beat the close |
+| mean CLV vs **book** | +2.07 pts (± 0.88 at 90%), 38/51 beat the close |
+| mean CLV vs **sharp's entry** (signal) | +0.03 pts over all 60 priced picks, 52% beat — the signal sits at the close; the +1.6 is the book spread |
 | flat ROI, v4/s5 | −1.5% [−27, +22] on 45 games |
 | sized ROI, v4/s5 | −12% |
 | all-time ledger | 32-33, −26.9u at published sizes |
 
-`research/review.py` regenerates every cut in this file from the live ledger.
+Both CLVs are stored on every pick (`clv`, `clv_entry`) and printed by
+`picks.py --record`, `pickclv.py` and the nightly card. **The KPI is now the
+signal CLV** (`clv_entry` ≥ 0 over 200 picks); the book CLV is reported beside
+it as the line-shopping edge. `research/review.py` regenerates every cut in
+this file from the live ledger.
 
 ## 9. Standing priors — refuted ideas that should stay refuted
 

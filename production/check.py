@@ -643,13 +643,19 @@ def main():
         return 0
 
     if alert is not None:
-        fresh = [h for h in good if h["conv"] >= alert and h["delta"] == "NEW"]
+        new = [h for h in good if h["conv"] >= alert and h["delta"] == "NEW"]
+        # 2026-10-07 (EXP-027): a side that another qualifying sharp is fading
+        # is not a play — it is not emailed. Counted so the reader knows.
+        held = [h for h in new if (h.get("opposed") or 0) >= 1]
+        fresh = [h for h in new if (h.get("opposed") or 0) < 1]
         fresh.sort(key=lambda h: -h["conv"])
         if fresh:
             print(f"{len(fresh)} new high-conviction play(s) "
                   f"scoring {alert:.0f}+ · {now.astimezone():%a %-I:%M %p %Z}")
             if bad:
                 print(f"(note: {len(bad)} wallet lookups failed — scan was partial)")
+            if held:
+                print(f"({len(held)} more withheld — contested: a tracked sharp is on the other side)")
             print()
             for h in fresh:
                 mins = (h["start"] - now).total_seconds() / 60
@@ -660,6 +666,8 @@ def main():
                     tags.append("underdog")
                 if h["fresh"]:
                     tags.append("entered at current price")
+                if (h.get("consensus") or 1) >= 2:
+                    tags.append(f"{h['consensus']} sharps this way")
                 print(f"[{h['conv']:.0f}] {m0(h['stake'])} on {h['side']}  {am(h['entry'])}")
                 print(f"     {h['league']} · {h['game']} · {h['start'].astimezone():%-I:%M %p}"
                       f" (in {int(mins//60)}h{int(mins%60):02d}m)")

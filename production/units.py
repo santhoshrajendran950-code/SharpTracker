@@ -124,7 +124,13 @@ ledger's dollar stakes into units for reporting — it is never rendered. Nothin
 published anywhere shows a dollar figure for Santhosh's own money.
 """
 UNIT_USD = 200.0         # $ per unit, for converting the ledger to units only
-SIZING_VERSION = "s5"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands
+SIZING_VERSION = "s6"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands; s6 FLAT
+FLAT = True              # s6 (2026-10-07): 1u on every graded pick. Sized trailed flat live
+                         # (-17% vs +2.4%), in all 7 OOS football months and the Sep rebuild
+                         # (-27.3% vs -22.0%); the 90+ band took the biggest units and went
+                         # 19-26. Set False to replay s5 in backtests. EXP-022.
+OVERRIDE_UNITS = 0.5     # s6: a pick that publishes through a price_max override (a bet on
+                         # a person, not a validated rule) risks half a unit until 40 games.
 CORE_CONV = 80.0         # v3 80-89: +6.4% / +23.7% in the two windows; 70-79 is +3% in both
 CORE_MAX_DOG = 0.50      # core = favourites/pick'em only. Both backtest windows
                          # (2026-09-22): dogs -20% / -17%, favourites -0.4% / +10%.
@@ -187,6 +193,21 @@ def recommend(h):
     conv = h.get("conv") or 0
     if conv < MIN_CONV:
         return 0.0, f"score {conv:.0f} below {MIN_CONV:.0f}", ["below gate"]
+
+    if FLAT:
+        notes = ["core" if conv >= CORE_CONV else "rest"]
+        if not h.get("fresh"):
+            notes.append("stale")                       # reported, not sized
+        u = 1.0
+        try:
+            import form
+            tr = form._trust(h.get("user"))
+            if tr and "price_max" in tr and (h.get("entry") or 0) > 0.643:
+                u = OVERRIDE_UNITS
+                notes.append("override")
+        except Exception:
+            pass
+        return u, f"v4 {conv:.0f} · flat", notes
 
     # s5 — base size from the score band. The size multiple is reported, not used.
     u = 0.0
