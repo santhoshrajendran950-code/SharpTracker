@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — 09:00 morning scan email (timer)
+
+[Timer]
+OnCalendar=*-*-* 09:00
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

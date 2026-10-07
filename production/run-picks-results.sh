@@ -19,7 +19,7 @@ case "$OUT" in
 esac
 /usr/bin/python3 - "$OUT" "$DAY" >> "$LOG" 2>&1 <<'PY'
 import sys, os
-sys.path.insert(0, "/Users/santhosh/.nightly-line")
+sys.path.insert(0, os.getcwd())   # every runner cd's to its own dir first
 import xpost, xcard, picks, discordsink as D
 text, day = sys.argv[1], sys.argv[2]
 # results card: every settled pick W/L with its price and units. Valued by

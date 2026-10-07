@@ -14,11 +14,13 @@ secret, personal, or the proprietary edge itself.
 | `lines/` | The hourly sportsbook line archive (Odds API output; large, and licensed data). |
 | Research raw data (`windows/**/*.jsonl`, `*.json` except `probe_results.json`) | ~480 MB of rebuilt positions, trades and per-wallet priors — all keyed on wallet addresses, and over GitHub's file limits. |
 | `backtest-v1` data (`bt_*.json`, `*.jsonl`) | Same reasons; 237 MB. |
-| Logs, `*.bak-*`, `__pycache__` | Noise. |
+| Logs, `*.bak-*` (now parked in `~/.nightly-line/_backups/`), `__pycache__` | Noise. |
+| `aliases.json`, `nhl_sharps.{json,md}`, `keep_list` raw data | Real usernames / wallet addresses. |
+| `~/.nightly-line/.redact` | The redaction map itself (the strings below, `from\|to` per line). `tools/sync-from-live.sh` reads it and refuses to finish if any `from` survives in the tree. |
 
 ## Redactions inside committed files
 
-Three strings were replaced in the staged copies (the originals on the host are unchanged). A full-tree grep for each returns zero hits after the pass.
+Four strings are replaced by `tools/sync-from-live.sh` on every sync (the originals on the host are unchanged). The script greps the whole tree afterwards and exits non-zero if any survive, and also refuses any 40-hex wallet address under `results/` or `docs/`.
 
 - The operator's email → `YOUR_EMAIL@example.com` in `alert.sh`, `alert-catalyst.sh`, `run-scan.sh`, `run-live.sh`, `run-windows.sh`, `run-weeksheet.sh` (a comment), `weekpost.py`, and `deploy/nightly-line.env.example`
 - Two third-party BCC recipients → `BCC_RECIPIENT_1/2@example.com` in `alert.sh` and `deploy/nightly-line.env.example`

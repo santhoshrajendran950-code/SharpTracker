@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Line — 23:59 results card (timer)
+
+[Timer]
+OnCalendar=*-*-* 23:59
+AccuracySec=15s
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

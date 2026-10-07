@@ -43,8 +43,8 @@ echo "[$(date '+%F %T %Z')] $LEAGUE | $LABEL | $(printf '%s' "$OUT" | tail -1)" 
 # the same wave board to Discord, same moment, full table rather than the
 # 280-character headline
 /usr/bin/python3 - "$BOARD" "$LABEL" >> "$LOG" 2>&1 <<'PY'
-import sys, json
-sys.path.insert(0, "/Users/santhosh/.nightly-line")
+import sys, json, os
+sys.path.insert(0, os.getcwd())   # every runner cd's to its own dir first
 import postplays as P, discordsink as D
 from oddskey import get_key
 rows = [r for r in json.load(open(sys.argv[1])) if (r.get("conv") or 0) >= 60]

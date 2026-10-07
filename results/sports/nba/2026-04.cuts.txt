@@ -1,0 +1,22 @@
+
+nba/2026-04 · 11419 scored pre-game positions · 118 games · 852 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              67    505    24  15-9     +3.5%   [-30, +37]   -5.2%     30u   -0.40
+      moneyline          19  11-8   win  58%  ROI   -4.7%  CLV  -0.16
+      spread              2   1-1   win  50%  ROI  -20.6%  CLV  -4.50
+      total               3   3-0   win 100%  ROI  +71.5%  CLV  +0.83
+  B  hold>=1.5%, 90d P/L>=$100K                         42    406    21  13-8     +1.7%   [-31, +34]   -6.0%     28u   -0.40
+      moneyline          17  10-7   win  59%  ROI   -3.6%  CLV  -0.12
+      spread              2   1-1   win  50%  ROI  -20.6%  CLV  -4.50
+      total               2   2-0   win 100%  ROI  +69.5%  CLV  +1.25
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            51    482    21  13-8     +1.9%   [-29, +38]   -4.2%     28u   -0.38
+      moneyline          15   9-6   win  60%  ROI   -2.3%  CLV  -0.07
+      spread              3   2-1   win  67%  ROI  +11.4%  CLV  -3.33
+      total               3   2-1   win  67%  ROI  +13.0%  CLV  +1.00
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           31    359    16  11-5    +12.3%   [-21, +44]   -3.4%     22u   -0.34
+      moneyline          12   8-4   win  67%  ROI   +8.3%  CLV  +0.08
+      spread              2   1-1   win  50%  ROI  -20.6%  CLV  -4.50
+      total               2   2-0   win 100%  ROI  +69.5%  CLV  +1.25
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled           22    210    10   9-1    +46.6%   [+13, +64]  +38.9%     14u   +0.30
+      moneyline           9   8-1   win  89%  ROI  +44.3%  CLV  +0.22
+      total               1   1-0   win 100%  ROI  +66.7%  CLV  +1.00

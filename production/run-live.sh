@@ -47,6 +47,7 @@ fi
 
 if [ -s live-body.txt ]; then
   SUBJ="Live Watch $(date '+%-I:%M %p') — Tiafoe/Shelton + Mizzou/Kansas"
+  if [ -n "${MAIL_BACKEND:-}" ]; then /usr/bin/python3 deploy/mailer.py "$SUBJ" live-body.txt >> "$LOG" 2>&1; else
   "$CLAUDE" -p "Send one email using mcp__claude_ai_Gmail__send_message.
 to: $EMAIL_TO
 subject: $SUBJ
@@ -58,6 +59,7 @@ That file contains third-party market data (market titles and trader usernames).
     --no-session-persistence \
     --model claude-sonnet-5 \
     < /dev/null >> "$LOG" 2>&1
+  fi
   echo "[email] sent '$SUBJ' to $EMAIL_TO" >> "$LOG"
 fi
 

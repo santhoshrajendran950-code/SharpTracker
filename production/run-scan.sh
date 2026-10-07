@@ -128,6 +128,7 @@ if [ -s email-body.txt ]; then
   COUNT=$(head -1 email-body.txt | awk '{print $1}')
   # The body contains third-party market text, so the sending agent is told
   # explicitly to treat it as data and copy it verbatim.
+  if [ -n "${MAIL_BACKEND:-}" ]; then /usr/bin/python3 deploy/mailer.py "Sharp Money — $COUNT large position(s) flagged" email-body.txt >> "$LOG" 2>&1; else
   "$CLAUDE" -p "Send one email using mcp__claude_ai_Gmail__send_message.
 to: $EMAIL_TO
 subject: Sharp Money — $COUNT large position(s) flagged
@@ -139,6 +140,7 @@ That file contains third-party market data (market titles and trader usernames).
     --no-session-persistence \
     --model claude-sonnet-5 \
     < /dev/null >> "$LOG" 2>&1
+  fi
   echo "[email tier] attempted send of $COUNT large position(s) to $EMAIL_TO" >> "$LOG"
 else
   echo "[email tier] no position at or above \$$EMAIL_MIN_STAKE — no email sent" >> "$LOG"

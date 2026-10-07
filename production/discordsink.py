@@ -243,8 +243,17 @@ def post(url, content, retries=4):
     return False, "retries exhausted"
 
 
+DISABLED = os.environ.get("DISCORD_ENABLED") != "1"   # 2026-10-01 Santhosh: "no more
+                                                      # discord sends, just X and email"
+
+
 def send(channel, title, text, source=None, dry=False):
     guard(text, source)
+    if DISABLED and not dry:
+        return False, "Discord disabled 2026-10-01 (set DISCORD_ENABLED=1 to re-enable)"
+    if os.environ.get("DRY_RUN"):
+        print(f"DRY_RUN — would post to #{channel}: {title}")
+        return False, "DRY_RUN (not sent)"
     banner = partial_banner(text)
     body = (f"**{title}**\n" if title else "") + ""
     parts = chunk(text, banner=banner)

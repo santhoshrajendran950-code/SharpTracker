@@ -1,5 +1,5 @@
 [Unit]
-Description=Nightly Line — sharp-money alert scan
+Description=Nightly Line — email alert — new 65+ positions
 After=network-online.target
 Wants=network-online.target
 
@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=oneshot
 User=nightly
 WorkingDirectory=/opt/nightly-line
-ExecStart=/opt/nightly-line/deploy/alert-server.sh
-# a stuck sweep must not overlap the next timer fire
+EnvironmentFile=/opt/nightly-line/deploy/nightly-line.env
+ExecStart=/opt/nightly-line/alert.sh
+# a stuck run must never overlap the next timer fire
 TimeoutStartSec=600

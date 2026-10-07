@@ -29,6 +29,7 @@ for _ in $(seq 1 30); do
 done
 
 send_email() {   # $1 subject, $2 body file
+  if [ -n "${MAIL_BACKEND:-}" ]; then /usr/bin/python3 deploy/mailer.py "$1" "$2" >> "$LOG" 2>&1; return; fi
   "$CLAUDE" -p "Send one email using mcp__claude_ai_Gmail__send_message.
 to: $EMAIL_TO
 subject: $1

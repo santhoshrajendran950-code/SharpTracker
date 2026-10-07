@@ -1,0 +1,20 @@
+
+mlb/2026-04 · 5146 scored pre-game positions · 359 games · 248 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              26     73     9   5-4     -5.8%   [-45, +33]   -3.3%     14u   +0.00
+      moneyline           7   3-4   win  43%  ROI  -27.7%  CLV  +0.14
+      spread              1   1-0   win 100%  ROI  +72.4%  CLV  -1.00
+      total               1   1-0   win 100%  ROI  +69.5%  CLV  +0.00
+  B  hold>=1.5%, 90d P/L>=$100K                         19     69     7   5-2    +21.1%               +23.1%     11u   +0.00
+      moneyline           5   3-2   win  60%  ROI   +1.2%  CLV  +0.20
+      spread              1   1-0   win 100%  ROI  +72.4%  CLV  -1.00
+      total               1   1-0   win 100%  ROI  +69.5%  CLV  +0.00
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            18     91    10   6-4     +1.8%   [-48, +50]   +1.6%     15u   +0.00
+      moneyline           8   4-4   win  50%  ROI  -15.5%  CLV  +0.13
+      spread              1   1-0   win 100%  ROI  +72.4%  CLV  -1.00
+      total               1   1-0   win 100%  ROI  +69.5%  CLV  +0.00
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           11     66     5   4-1    +37.3%               +47.4%      7u   +0.00
+      moneyline           3   2-1   win  67%  ROI  +14.9%  CLV  +0.33
+      spread              1   1-0   win 100%  ROI  +72.4%  CLV  -1.00
+      total               1   1-0   win 100%  ROI  +69.5%  CLV  +0.00
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            6     58     0     —

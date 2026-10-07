@@ -110,3 +110,32 @@ fixed). The v4/s5/override configuration has published one pick so far
 (Packers −4.5, 4u, 2026-09-24). CLV on the three cleanly-priced picks:
 −0.93 pts, 0 of 3 beat the close. That is the honest starting line for the
 forward record; the target is CLV ≥ 0 over 200 graded picks.
+
+## 7. Update 2026-10-07 — the all-sports run finished, and the live record
+
+The 10-sport × 13-month run completed 2026-10-02 (99 scored windows; full
+table in `results/sports/cross_sport_snapshot.txt`). Cut A, all market types:
+
+| Sport | Picks | W-L | Flat ROI | 90% CI | s5 ROI | avg CLV |
+|---|---|---|---|---|---|---|
+| ALL | 1,869 | 1098-771 | −2.7% | [−7, +1] | −3.7% | +0.04 |
+| Esports | 461 | 298-163 | +5.9% | [−2, +14] | +3.0% | +0.20 |
+| Soccer | 247 | 151-96 | +0.5% | [−13, +13] | +2.5% | −0.01 |
+| MLB | 355 | 204-151 | −4.1% | [−13, +5] | −3.2% | +0.04 |
+| Football | 238 | 133-105 | −7.4% | [−19, +4] | −11.7% | +0.16 |
+| NHL | 96 | 54-42 | −7.2% | [−24, +8] | −1.2% | −0.22 |
+| NBA | 465 | 255-210 | −8.2% | [−17, +1] | −9.3% | −0.10 |
+| NBA moneyline only | 320 | 165-155 | **−14.6%** | **[−27, −3]** | −13.3% | −0.22 |
+| Cricket | 1 | 1-0 | — | — | — | — |
+| WNBA | 6 | 2-4 | — | — | — | — |
+
+Tennis and rugby produced no cut-A picks. The only interval that excludes
+zero is NBA moneylines, and it is negative. Esports is the only positive
+point estimate and is positive in 9 of its 11 non-trivial months. Both are
+logged as experiments (EXP-021, EXP-023).
+
+The live ledger on 2026-10-07: 65 graded picks, 32-33, −26.9u at published
+sizes; the 51 v4/s5 picks are 27-24, flat −1.5% [−27, +22], **CLV +2.07 ± 0.88,
+38/51 beat the close**. Every cut is in `results/live/2026-10-07.md`; the
+contradictions it surfaces (pick'em override, s5 vs flat, totals) are in
+`docs/experiments/LEDGER.md`.

@@ -64,8 +64,11 @@ def prices(h, key, want=2):
     # The Odds API's `totals` market is GOALS/RUNS/POINTS. A title like
     # "O/U 9.5 Total Corners" still yields 9.5, which then matches a goals line
     # and prints a confident, wrong price. Exotic totals are refused.
-    if any(w in mkt.lower() for w in ("corner", "card", "booking", "shots",
-                                      "offside", "foul")):
+    # Whole words only: "card" as a substring refused every St. Louis
+    # CARDinals / Arizona CARDinals total (found 2026-09-26, Over 7.5 STL/MIL
+    # sat unpublished as "no bettable price").
+    if re.search(r"\b(corners?|cards?|bookings?|shots|offsides?|fouls?)\b",
+                 mkt, re.I):
         return [], None
     h = dict(h)
     if isinstance(h.get("start"), str):

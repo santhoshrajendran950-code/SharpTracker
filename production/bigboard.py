@@ -9,12 +9,12 @@
 Emits pipe-delimited rows so the table renders identically every time.
 Reuses check.py's scan and scoring so the numbers can't drift between views.
 """
-import importlib.util, json, re, sys
+import importlib.util, os, json, re, sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
-spec = importlib.util.spec_from_file_location("chk", "/Users/santhosh/.nightly-line/check.py")
+spec = importlib.util.spec_from_file_location("chk", os.path.join(os.path.dirname(os.path.abspath(__file__)), "check.py"))
 chk = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(chk)
 
@@ -175,7 +175,7 @@ def main():
     # league args (e.g. `bigboard.py nfl atp`) shrink the slate massively —
     # 7 tags/400 games down to 2 tags/~30, which is the whole runtime.
     TAG_FOR = {"nfl": "nfl", "ncaaf": "cfb", "cfb": "cfb", "mlb": "mlb",
-               "nba": "nba", "ncaab": "cbb", "cbb": "cbb", "pga": "golf",
+               "nba": "nba", "wnba": "wnba", "nhl": "nhl", "ncaab": "cbb", "cbb": "cbb", "pga": "golf",
                "golf": "golf", "atp": "tennis", "wta": "tennis", "tennis": "tennis"}
     picked = [a.lower() for a in argv if a.lower() in TAG_FOR]
     tags = sorted({TAG_FOR[a] for a in picked}) if picked else chk.TAGS
@@ -280,13 +280,13 @@ def main():
         anyd = any(m["dog"] for m in mem)
         tot = sum(m["stake"] for m in mem)
         agree = chk.sides_agree(mem)
-        book = chk.two_sided(mem)
+        book = chk.two_sided_markets(mem)
         for m in mem:
             m["stack"] = len({x["market"] for x in mem}) if agree else 1
             m["stack_stake"] = tot if agree else m["stake"]
             m["stack_dog"] = anyd if agree else m["dog"]
             m["hedged"] = not agree
-            m["two_sided"] = book
+            m["two_sided"] = m["market"] in book
     for h in hits:
         h["conv"] = chk.conviction(h)
     chk.mark_consensus(hits)

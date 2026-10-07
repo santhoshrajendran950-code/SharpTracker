@@ -131,6 +131,10 @@ def qualifies(h):
     u, _, _ = U.recommend(h)
     if not u:
         return False, "no size"
+    vt = h.get("vs_typical")
+    if vt and vt < U.TINY_FOR_HIM and (h.get("n_open") or 0) >= U.TRUST_POSITIONS \
+            and (h.get("typical") or 0) >= U.TRUST_TYPICAL:
+        return False, f"{vt:.2f}x his normal bet — alert, not a pick"
     if (h.get("n_open") or 0) < U.MIN_POSITIONS:
         return False, f"only {h.get('n_open')} open positions"
     if (h.get("typical") or 0) < U.MIN_TYPICAL:
@@ -155,6 +159,19 @@ def scan(board_path, key_odds=None):
             continue
         if key(h) in seen:
             skipped["already posted"] += 1
+            continue
+        # One call per game per family. 2026-09-27: Browns +4.5 AND +3.5 went
+        # out (6u, same side, two lines), then Saints ML 4u AND Raiders +3.5 4u
+        # (both sides of one game) -- two sharps, two overrides, no guard. A
+        # second line on a side we already published adds nothing; a call on
+        # the other side contradicts the first. Totals are their own family.
+        fam = "total" if (h.get("side") in ("Over", "Under")) else "side"
+        clash = [p for p in load() + out
+                 if p.get("slug") == h.get("slug")
+                 and ("total" if p.get("side") in ("Over", "Under") else "side") == fam]
+        if clash:
+            same = any(p.get("side") == h.get("side") for p in clash)
+            skipped["same game, already have a " + ("call on this side" if same else "call on the OTHER side")] += 1
             continue
         u, _, _ = U.recommend(h)
         bettable, ref = P.prices(h, okey, want=2)

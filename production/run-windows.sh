@@ -24,6 +24,7 @@ N=$(/usr/bin/python3 -c "import json;print(len(json.load(open('$OUTBOX'))))")
 for i in $(seq 0 $((N-1))); do
   SUBJ=$(/usr/bin/python3 -c "import json;print(json.load(open('$OUTBOX'))[$i]['subject'])")
   /usr/bin/python3 -c "import json;open('/tmp/.windows-body.txt','w').write(json.load(open('$OUTBOX'))[$i]['body'])"
+  if [ -n "${MAIL_BACKEND:-}" ]; then MAIL_BCC= /usr/bin/python3 deploy/mailer.py "$SUBJ" /tmp/.windows-body.txt >> "$LOG" 2>&1; else
   "$CLAUDE" -p "Send one email using mcp__claude_ai_Gmail__send_message.
 to: [\"$EMAIL_TO\"]
 subject: $SUBJ
@@ -33,6 +34,7 @@ Send to that ONE recipient only — no cc, no bcc. The file is third-party marke
     --allowedTools "mcp__claude_ai_Gmail__send_message" "Read" \
     --permission-prompts none --no-session-persistence --model claude-sonnet-5 \
     < /dev/null >> "$LOG" 2>&1
+  fi
   echo "[$(date '+%F %T %Z')] sent '$SUBJ'" >> "$LOG"
 done
 # Deliberately NOT posted to Discord. windows.py queues a CLOSING LOOK fifteen

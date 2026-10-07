@@ -22,7 +22,7 @@ Two defences:
 The salt lives in .anon-salt (chmod 600) and is generated on first use. Deleting
 it re-randomises every alias, so keep it if continuity matters.
 """
-import hashlib, os, secrets
+import hashlib, json, os, secrets
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SALT_FILE = os.path.join(HERE, ".anon-salt")
@@ -48,12 +48,55 @@ def _salt():
     return s
 
 
+REGISTRY = os.path.join(HERE, "aliases.json")   # {codename: user} — private,
+                                                 # wallet-keyed, never leaves the box
+
+
+def _registry():
+    try:
+        with open(REGISTRY) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _candidates(who):
+    """Codenames for `who`, best first — the same first candidate the old
+    hash-only scheme produced, so nobody already public changes name."""
+    h = hashlib.sha256((_salt() + str(who).strip().lower()).encode()).digest()
+    for i in range(0, len(h) - 1, 2):
+        yield f"{ADJ[h[i] % len(ADJ)]} {NOUN[h[i + 1] % len(NOUN)]}"
+
+
 def alias(who):
-    """Stable, one-way codename for a wallet or username."""
+    """Stable, one-way, and UNIQUE codename for a wallet or username.
+
+    2026-09-29: 16 x 16 = 256 codenames for 85+ bettors produced 16 collisions
+    ("Cinder Harrier" was two different sharps on public cards; "Indigo Stoat"
+    was three). First to claim a codename keeps it forever (aliases.json); a
+    later bettor whose hash lands on a taken name gets the next candidate from
+    the same hash, so the mapping is still deterministic and still one-way.
+    """
     if not who:
         return "Unknown"
-    h = hashlib.sha256((_salt() + str(who).strip().lower()).encode()).digest()
-    return f"{ADJ[h[0] % len(ADJ)]} {NOUN[h[1] % len(NOUN)]}"
+    key = str(who).strip().lower()
+    reg = _registry()
+    for name, owner in reg.items():
+        if owner == key:
+            return name
+    for cand in _candidates(who):
+        if cand not in reg:
+            reg[cand] = key
+            try:
+                tmp = REGISTRY + ".tmp"
+                with open(tmp, "w") as f:
+                    json.dump(reg, f, indent=1, sort_keys=True)
+                os.chmod(tmp, 0o600)
+                os.replace(tmp, REGISTRY)
+            except OSError:
+                pass
+            return cand
+    return "Unknown"
 
 
 def money(n):

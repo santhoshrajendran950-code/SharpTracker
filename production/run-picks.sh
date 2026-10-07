@@ -28,20 +28,35 @@ BOARD=/tmp/.picks-board.json
 
 # --pre: a pick is a pre-kickoff call. Without it live positions were being
 # published in-game (Giants ML 6 min after kickoff on 2026-09-21).
-/usr/bin/python3 bigboard.py --pre --min-score 65 --json "$BOARD" >/dev/null 2>>"$LOG" || {
-  echo "[$(date '+%F %T %Z')] board failed — skipped" >> "$LOG"; exit 0; }
-[ -s "$BOARD" ] || exit 0
+# Log how long the sweep took: launchd skips a slot while the previous run is
+# still going, so a slow board shows up only as a silent gap in this log
+# (54 minutes on 2026-09-25 evening) unless the duration is written down.
+T0=$(date +%s)
+# If another board (the scheduled X card, a manual run) holds the bigboard
+# lock, wait for it rather than skip: on 2026-09-30 the 1:40 and 1:50 runs
+# both skipped behind the pre-game MLB card and a $224K ticket placed at 1:57
+# was never scanned before first pitch. Up to 4 x 30s, then give up.
+TRY=0
+until /usr/bin/python3 bigboard.py --pre --min-score 65 --json "$BOARD" >/dev/null 2>>"$LOG"; do
+  TRY=$((TRY+1))
+  if [ $TRY -ge 4 ] || [ ! -e /tmp/.bigboard.lock ]; then
+    echo "[$(date '+%F %T %Z')] board failed after $(( $(date +%s) - T0 ))s — skipped" >> "$LOG"; exit 0
+  fi
+  sleep 30
+done
+DUR=$(( $(date +%s) - T0 ))
+[ -s "$BOARD" ] || { echo "[$(date '+%F %T %Z')] empty board (${DUR}s)" >> "$LOG"; exit 0; }
 
 # Post FIRST, log only what actually published. picks.jsonl is the public
 # record; a pick sitting in it that X rejected (402 credits, 403 permissions)
 # would be a call nobody could have seen, which is worse than no record at all.
 NEW=$(/usr/bin/python3 picks.py --scan "$BOARD" --log 2>>"$LOG" | head -1)
-echo "[$(date '+%F %T %Z')] $NEW" >> "$LOG"
+echo "[$(date '+%F %T %Z')] $NEW · board ${DUR}s" >> "$LOG"
 case "$NEW" in 0\ new*|"") rm -f "$BOARD"; exit 0 ;; esac
 
 /usr/bin/python3 - >> "$LOG" 2>&1 <<'PY'
 import sys, json, os
-sys.path.insert(0, "/Users/santhosh/.nightly-line")
+sys.path.insert(0, os.getcwd())   # every runner cd's to its own dir first
 import picks, xpost, xcard, discordsink as D
 import units as _U
 def U_fmt(p): return _U.fmt(p["units"])

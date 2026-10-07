@@ -163,6 +163,9 @@ def verify():
 
 def post(text, media_id=None):
     """POST /2/tweets. Body is JSON, so only the oauth_* params are signed."""
+    if os.environ.get("DRY_RUN"):
+        print(f"DRY_RUN — would post to X ({len(text)} chars{', with image' if media_id else ''}):\n{text}")
+        return False, "DRY_RUN (not sent)", None
     oauth = {
         "oauth_consumer_key": cred("api_key"),
         "oauth_nonce": secrets.token_hex(16),

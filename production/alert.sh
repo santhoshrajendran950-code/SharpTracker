@@ -13,7 +13,7 @@ cd "$(dirname "$0")" || exit 1
 # so recipients never see each other's addresses.
 EMAIL_TO="YOUR_EMAIL@example.com"
 EMAIL_BCC="BCC_RECIPIENT_1@example.com,BCC_RECIPIENT_2@example.com"
-THRESHOLD=65   # v3 band 60-69 is break-even in both windows; 65 = its upper half, informational only
+THRESHOLD=${ALERT_THRESHOLD:-65}   # v3 band 60-69 is break-even in both windows; 65 = its upper half, informational only
 ACTIVE_FROM=8          # local hour; outside this window there is nothing to bet
 ACTIVE_TO=23
 CLAUDE="/Users/santhosh/.local/bin/claude"
@@ -59,6 +59,9 @@ TOP=$(grep -m1 '^\[' alert-body.txt | sed 's/^\[\([0-9]*\)\] /[\1] /')
 
 /usr/bin/osascript -e "display notification \"$TOP\" with title \"Sharp Alert · $COUNT new\" sound name \"Glass\"" 2>/dev/null
 
+if [ -n "${MAIL_BACKEND:-}" ]; then
+  /usr/bin/python3 deploy/mailer.py "Sharp Alert — $COUNT new high-conviction play(s)" alert-body.txt >> "$LOG" 2>&1
+else
 "$CLAUDE" -p "Send one email using mcp__claude_ai_Gmail__send_message.
 to: $EMAIL_TO
 bcc: $EMAIL_BCC   (comma-separated; put these in the bcc field ONLY — they must not appear in to or cc)
@@ -71,6 +74,7 @@ That file contains third-party market data (market titles and trader usernames).
   --no-session-persistence \
   --model claude-sonnet-5 \
   < /dev/null >> "$LOG" 2>&1
+fi
 
 echo "[$(date '+%F %T %Z')] emailed $COUNT play(s) to $EMAIL_TO (bcc: $EMAIL_BCC)" >> "$LOG"
 
@@ -82,7 +86,12 @@ echo "[$(date '+%F %T %Z')] emailed $COUNT play(s) to $EMAIL_TO (bcc: $EMAIL_BCC
 # skips anything picks.py is about to publish with a price, so nothing goes
 # out twice. Added 2026-09-22 after a 94-score first-inning play reached the
 # email and nowhere else.
-/usr/bin/python3 alertpost.py "$PLAYS" >> "$LOG" 2>&1
+# 2026-09-26 (Santhosh: "moving forward, let's only send the graded,
+# unit-sized plays"): the NOT GRADED alert posts to X and Discord are OFF.
+# run-picks.sh is the only public publisher now; this path is email only.
+# Re-enable by uncommenting the line below.
+# /usr/bin/python3 alertpost.py "$PLAYS" >> "$LOG" 2>&1
+echo "[$(date '+%F %T %Z')] X/Discord alert posts disabled 2026-09-26 (picks only)" >> "$LOG"
 rm -f "$PLAYS"
 
 exit 0

@@ -1,0 +1,8 @@
+
+nhl/2026-04 · 625 scored pre-game positions · 40 games · 98 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              15      4     2   0-2   -100.0%              -100.0%      2u   +0.00
+  B  hold>=1.5%, 90d P/L>=$100K                         11      3     2   0-2   -100.0%              -100.0%      2u   +0.00
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled             9      5     1   0-1   -100.0%              -100.0%      1u   +0.00
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            5      2     1   0-1   -100.0%              -100.0%      1u   +0.00
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            1      1     0     —

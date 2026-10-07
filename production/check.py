@@ -55,7 +55,7 @@ MONTH_POOL = 500
 #                   order outcomes (every one flips sign between windows), so
 #                   the score is only meaningful where picks.py applies it.
 MODEL_VERSION = "v4"
-TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "tennis", "golf", "soccer"]
+TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer"]   # wnba, nhl added 2026-09-30
 
 # STRICT bars (default). --loose restores the older, permissive set.
 # Tightened 2026-09-12: the old bars passed things like a $3,136 bet at -739
@@ -84,7 +84,7 @@ STATS = {"ok": 0, "fail": 0, "unreachable": 0}
 
 def get(url, retries=RETRIES):
     for a in range(retries + 1):
-        p = subprocess.run(["curl", "-s", "--max-time", "30", "-w", "\n%{http_code}", url],
+        p = subprocess.run(["curl", "-s", "--max-time", "15", "-w", "\n%{http_code}", url],
                            capture_output=True, text=True)
         body, _, code = p.stdout.rpartition("\n")
         if code == "200":
@@ -96,6 +96,14 @@ def get(url, retries=RETRIES):
         if code == "429" and a < retries:
             time.sleep(BACKOFF * (2 ** a))
             continue
+        # A stalled request costs a full --max-time per try. At 30s x 6 tries
+        # that was 3 min per wallet per thread, and a data-api stall turned the
+        # 7:00 PM 2026-09-25 board into a 46-minute sweep that blocked five pick
+        # runs and the alert agents. One retry for a dead connection, not five.
+        if code == "000" and a >= 1:
+            STATS["fail"] += 1
+            STATS["unreachable"] += 1
+            return None
         if a >= retries:
             STATS["fail"] += 1
             if code == "000":
@@ -325,12 +333,31 @@ def sides_agree(members):
     return all(a == b or a in b or b in a for i, a in enumerate(lst) for b in lst[i + 1:])
 
 
+HEDGE_MATERIAL = 0.25    # the smaller side must be >= this x the larger side
+
+
 def two_sided(members):
-    """Wallet is on BOTH sides of the same market — a book, not an opinion."""
-    by_market = defaultdict(set)
+    """Wallet is on BOTH sides of the same market AT SIZE — a book, not an
+    opinion. 2026-09-28: primm's $104K Bears +3.5 vanished from the board
+    because of a $3K Eagles -3.5 ticket in the same market. A middle/lottery
+    ticket under HEDGE_MATERIAL of the main side is not a hedge."""
+    return bool(two_sided_markets(members))
+
+
+def two_sided_markets(members):
+    """The set of market titles on which this wallet is two-sided at size.
+    Per MARKET, not per game: primm's $1.8K/$550 middle on an alt spread was
+    knocking his $104K main-line position off the board (2026-09-28)."""
+    by_market = defaultdict(lambda: defaultdict(float))
     for m in members:
-        by_market[m["market"]].add(_norm_side(m["side"]))
-    return any(len(v) > 1 for v in by_market.values())
+        by_market[m["market"]][_norm_side(m["side"])] += float(m.get("stake") or 0)
+    out = set()
+    for mkt, sides in by_market.items():
+        if len(sides) > 1:
+            vals = sorted(sides.values())
+            if vals[-2] >= HEDGE_MATERIAL * vals[-1]:
+                out.add(mkt)
+    return out
 
 
 
@@ -539,14 +566,14 @@ def main():
         anyd = any(m["dog"] for m in mem)
         tot = sum(m["stake"] for m in mem)
         agree = sides_agree(mem)
-        book = two_sided(mem)
+        book = two_sided_markets(mem)
         for m in mem:
             # only count it as a stack when the legs actually back the same side
             m["stack"] = len({x["market"] for x in mem}) if agree else 1
             m["stack_stake"] = tot if agree else m["stake"]
             m["stack_dog"] = anyd if agree else m["dog"]
             m["hedged"] = not agree
-            m["two_sided"] = book
+            m["two_sided"] = m["market"] in book
     for h in hits:
         h["conv"] = conviction(h)
     mark_consensus(hits)

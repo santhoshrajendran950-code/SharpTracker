@@ -1,12 +1,10 @@
 [Unit]
-Description=Run the sharp-money alert scan on a fixed cadence
+Description=Nightly Line — email alert — new 65+ positions (timer)
 
 [Timer]
-OnCalendar=*:0/20
-# the script itself no-ops outside ACTIVE_FROM..ACTIVE_TO
-AccuracySec=30s
+OnCalendar=*-*-* 08..23:0/15
+AccuracySec=15s
 Persistent=false
-# never let two sweeps overlap — concurrent scans trip Polymarket's throttle
 RandomizedDelaySec=0
 
 [Install]

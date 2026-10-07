@@ -62,6 +62,8 @@ SPORT_FOR = {
     "MLB": ["baseball_mlb"],
     "NCAAB": ["basketball_ncaab"],
     "NBA": ["basketball_nba"],
+    "WNBA": ["basketball_wnba"],
+    "NHL": ["icehockey_nhl"],
     "PGA": ["golf_pga_championship_winner"],
 }
 _TENNIS_CACHE = {"keys": None}

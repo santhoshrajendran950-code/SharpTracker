@@ -1,0 +1,8 @@
+
+tennis/2025-10 · 0 scored pre-game positions · 0 games · 0 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K               8      0     0     —
+  B  hold>=1.5%, 90d P/L>=$100K                          5      0     0     —
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled             7      0     0     —
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled            4      0     0     —
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled            3      0     0     —

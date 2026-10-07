@@ -1,0 +1,23 @@
+
+mlb/2025-09 · 5237 scored pre-game positions · 375 games · 178 wallets
+  cut                                              wallets alerts picks     W-L    flat       90% CI      s5 risked     CLV
+  A  hold>=1.5%, 90d P/L>=$50K, vol>=$500K              19    440    71  40-31    -6.1%   [-29, +17]   -0.2%    120u   +0.08
+      moneyline          69  39-30  win  57%  ROI   -5.9%  CLV  +0.07
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  +0.00
+      total               1   1-0   win 100%  ROI  +72.4%  CLV  +0.50
+  B  hold>=1.5%, 90d P/L>=$100K                         14    280    65  36-29    -7.7%   [-29, +16]   -2.1%    112u   +0.01
+      moneyline          63  35-28  win  56%  ROI   -7.5%  CLV  -0.00
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  +0.00
+      total               1   1-0   win 100%  ROI  +72.4%  CLV  +0.50
+  C  hold>=3%,   90d P/L>=$50K, >=30 settled            17    428    68  37-31    -9.5%   [-32, +13]   -2.7%    116u   +0.07
+      moneyline          66  36-30  win  55%  ROI   -9.4%  CLV  +0.06
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  +0.00
+      total               1   1-0   win 100%  ROI  +72.4%  CLV  +0.50
+  D  hold>=3%,   90d P/L>=$100K, >=50 settled           12    268    62  33-29   -11.6%   [-33, +11]   -4.9%    108u   -0.01
+      moneyline          60  32-28  win  53%  ROI  -11.5%  CLV  -0.02
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  +0.00
+      total               1   1-0   win 100%  ROI  +72.4%  CLV  +0.50
+  E  hold>=5%,   90d P/L>=$100K, >=50 settled           10    231    53  29-24    -8.8%   [-30, +15]   -3.0%     94u   -0.06
+      moneyline          51  28-23  win  55%  ROI   -8.6%  CLV  -0.07
+      spread              1   0-1   win   0%  ROI -100.0%  CLV  +0.00
+      total               1   1-0   win 100%  ROI  +72.4%  CLV  +0.50

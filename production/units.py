@@ -156,6 +156,8 @@ MIN_TYPICAL = 0.0
 TRUST_POSITIONS = 10     # below this, the median is too few samples to believe
 TRUST_TYPICAL = 250.0    # below this, the median is real but trivially small
 CAP_UNTRUSTED = 1.0      # hard ceiling when the baseline cannot be trusted
+SMALL_FOR_HIM = 0.25     # s5.1: below this x his median, one rung down
+TINY_FOR_HIM = 0.10      # s5.1: below this, an alert, not a pick (picks.py)
 
 LADDER = [               # (vs_typical at least, units)
     (40.0, 5.0),
@@ -219,6 +221,15 @@ def recommend(h):
     if step:
         u = _step(u, step)
         notes.append(flag)
+
+    # s5.1 (2026-09-28) — a bet that is tiny FOR THIS TRADER does not earn his
+    # full size. Kch-Temp's $10.9K Over 41.5 (0.23x his NFL median; his 3rd-
+    # smallest NFL bet of 35) went out at 3u on the strength of his trusted
+    # step alone. Only applies when his median is believable (size_trusted).
+    if vt and vt < SMALL_FOR_HIM and (h.get("n_open") or 0) >= TRUST_POSITIONS \
+            and (h.get("typical") or 0) >= TRUST_TYPICAL:
+        u = _step(u, -1)
+        notes.append(f"{vt:.2f}x his normal")
 
     # s3 — scale by what he demonstrably sizes on, then snap back to the ladder
     mult = SPORT_MULT.get((h.get("league") or "").upper(), 1.0)

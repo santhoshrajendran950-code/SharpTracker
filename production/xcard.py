@@ -32,7 +32,7 @@ import anon
 import units as U
 import bigboard as B
 
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME = os.environ.get("CHROME_BIN") or "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"   # server: CHROME_BIN=/usr/bin/chromium
 HANDLE = "@tradesbotter"
 MAX_ROWS = 8             # past this the card goes taller than X shows uncropped
 MIN_CONV = 65

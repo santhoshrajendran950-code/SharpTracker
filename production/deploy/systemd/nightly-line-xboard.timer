@@ -1,0 +1,14 @@
+    [Unit]
+    Description=Nightly Line — X board cards at NFL/CFB waves (timer)
+
+    [Timer]
+    OnCalendar=Thu *-*-* 20:00,20:15
+OnCalendar=Sat *-*-* 11:45,12:00,15:15,15:30,18:45,19:00,21:45,22:00
+OnCalendar=Sun *-*-* 12:45,13:00,15:50,16:05,20:05,20:20
+OnCalendar=Mon *-*-* 20:00,20:15
+    AccuracySec=15s
+    Persistent=false
+    RandomizedDelaySec=0
+
+    [Install]
+    WantedBy=timers.target

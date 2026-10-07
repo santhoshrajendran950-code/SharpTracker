@@ -18,7 +18,9 @@ analysis. It deliberately does **not** contain the data — see
 | [`research/`](research/) | The historical backtest project (`~/nl-research` on the host). Frozen copies of the scoring/sizing modules in `research/lib/`, so production can change without altering results. `research/backtest-v1/` is the original 30-day backtest the live rules were built on. |
 | [`results/`](results/) | Aggregate reports only. `football/<month>/` has the 7 NFL/NCAAF months; `results/sports/<sport>/` fills in as the 10-sport run completes. `probe_results.json` is the sport × month existence table. |
 | [`charts/`](charts/) | Generated figures, described in [`docs/results.md`](docs/results.md). |
-| [`docs/`](docs/) | Methodology, results, the honest verdict, and the exclusion list. |
+| [`docs/`](docs/) | Methodology, results, the honest verdict, and the exclusion list. **[`docs/alert-rules.md`](docs/alert-rules.md)** is the rule record — every threshold that decides what gets alerted, with its evidence. **[`docs/experiments/LEDGER.md`](docs/experiments/LEDGER.md)** is every hypothesis tested, adopted or rejected, plus the weekly proposals. |
+| [`results/live/`](results/live/) | Weekly cuts of the live pick ledger from `research/review.py`: score band, price band, market type, league, hold, wager, consensus, override, sizing, week — each with a game-clustered CI and CLV. |
+| [`tools/`](tools/) | `sync-from-live.sh` pulls the live code and finished research results into this repo, redacted, and refuses to finish if a secret survives. `tidy-live.sh` parks the host's `*.bak` files. |
 
 ## The honest headline
 
@@ -47,6 +49,34 @@ judgment automated, tagged so it can be measured on its own.
 
 Full numbers and charts: [`docs/results.md`](docs/results.md).
 How everything is computed: [`docs/methodology.md`](docs/methodology.md).
+
+## Where things live
+
+- **Runtime:** `~/.nightly-line` on the Mac — data, logs, secrets, and the 32
+  launchd jobs. Never run from this repo.
+- **Code of record:** this repo. After editing a live script, run
+  `tools/sync-from-live.sh` and commit; the script redacts and checks.
+- **Research:** `~/nl-research` (raw windows, ~480 MB) mirrored here minus data.
+
+## The improvement loop
+
+Weekly, Monday morning:
+
+1. `tools/sync-from-live.sh` — code and finished research results into the repo.
+2. `python3 research/review.py --write` — every cut of the live ledger into
+   `results/live/<date>.md`, with the KPI line (CLV ≥ 0 over 200 v4/s5 picks).
+3. Read the cuts against `docs/alert-rules.md`. Any adopted rule whose live
+   cut now contradicts the evidence it was set on gets a line in
+   `docs/experiments/LEDGER.md`, and up to three new hypotheses are filed from
+   `docs/experiments/TEMPLATE.md` — each with the script that tests it and a
+   pre-registered pass/fail. Cheap tests run the same day on the 99 research
+   windows already on disk.
+4. Commit and push.
+
+Rules of evidence: a cut under ~40 games or with a CI through zero is noise;
+CLV is the KPI; one window proves nothing; "nothing survives" is an answer.
+Nothing in the loop touches production — a rule changes only when Santhosh
+says so, and the change is logged in both files.
 
 ## Running it
 
