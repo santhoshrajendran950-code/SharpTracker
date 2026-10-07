@@ -15,7 +15,8 @@
 # docs/commands.md says what each prints and how to read it.
 set -euo pipefail
 LIVE="$HOME/.nightly-line"
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+REPO="$(dirname "$(dirname "$SELF")")"
 PY=/usr/bin/python3
 cmd="${1:-}"; shift || true
 cd "$LIVE"
@@ -29,5 +30,5 @@ case "$cmd" in
   who)             exec $PY who.py "$@" ;;
   review)          exec $PY "$REPO/research/review.py" "$@" ;;
   sync)            exec "$REPO/tools/sync-from-live.sh" "$@" ;;
-  *) sed -n '2,15p' "$0"; exit 1 ;;
+  *) sed -n '2,15p' "$SELF"; exit 1 ;;
 esac
