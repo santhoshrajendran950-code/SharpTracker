@@ -147,3 +147,7 @@ published around them did not. Signal CLV is again ≈ 0: the followers get the
 closing price. The MLB and NHL Oct 1–6 rebuilds are still running
 (`~/nl-research/oct_week1.log`); both are tiny windows (MLB postseason, NHL
 opening week).
+
+MLB Oct 1–6 (postseason): 10 games, 12 alert-level rows, **1 pick, 0-1**.
+NHL Oct 1–6: 1 closed game on gamma — pipeline skipped it, confirmed not
+assumed. Neither says anything; both are recorded so the week is complete.
