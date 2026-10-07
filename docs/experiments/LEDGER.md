@@ -123,3 +123,18 @@ picks +2.4% flat, −17% sized. Research rebuild of Sep: football −22%, MLB �
 | — | Dual CLV: `clv_entry` (vs sharp's entry) beside `clv` (vs book) on every pick; KPI = signal CLV | `pickclv.py`, `picks.py --record` (results card line left for Santhosh) |
 
 Not installed, on purpose: EXP-026 (fresh/stale, $10–25K tier — research windows first), EXP-028 (MLB alert-only — one more month), trader share cap (design only).
+
+## Trader-override post-mortem 2026-10-07 (see `docs/reviews/2026-10-07-trader-overrides.md`)
+
+`research/trader_persist.py` over 440,300 settled positions / 9,520 traders:
+per-trader ROI rank correlation between chronological halves **−0.00**, in
+every price band ≈ 0; traders "licensed" on half-1 ROI > +10% regress to the
+pool in half 2 in all five bands; empirical-Bayes true-skill spread in the
+window band = **zero**. Trader **CLV** persists (**+0.60**) but does not
+convert to ROI at T-60 (+0.06). Prior hold predicts CLV only.
+
+### EXP-029 — CLV license: urgency and price discipline by trader CLV tier, instead of per-trader price windows
+- **Status:** proposed, pre-registered · **Rule:** replaces `price_min`/`price_max`; adds `clv_license.json` (rolling last-100 signal CLV, n ≥ 60, quartile tier)
+- **Prior:** trader CLV half-to-half rank corr +0.60; top quartile +1.14 → +0.74 pts; bottom −1.10 → −0.90
+- **Test:** on the 99 research windows, grade top-tier traders' in-window positions at **min(T-60 price, sharp's entry + 1 pt)** — i.e. only when a follower could have got within 1 pt of the entry — vs the pool at T-60. Pass: top-tier ROI interval excludes the pool mean in ≥ 3 sports with n ≥ 40 each, and bottom-tier in-window picks ≤ pool. Fail: no separation → tiers become an informational flag on the board only.
+- **Decision rule for `price_max`:** retire regardless (section 1 of the review); it is the same kind of sample as `price_min`.
