@@ -59,6 +59,7 @@ done
 for d in systemd legacy; do
   for f in "$LIVE"/deploy/$d/*; do [ -f "$f" ] && copy "$f" "$REPO/production/deploy/$d/$(basename "$f")"; done
 done
+copy "$LIVE/linemove_v5.json" "$REPO/production/linemove_v5.json"   # the one JSON that is a model, not data
 for f in "$PLISTS"/com.nightlyline.*.plist; do copy "$f" "$REPO/production/launchd/$(basename "$f")"; done
 
 echo "== research/ =="
