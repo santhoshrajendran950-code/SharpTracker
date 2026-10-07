@@ -1,0 +1,33 @@
+#!/bin/bash
+# The terminal commands, by the names they are asked for. Each runs the live
+# script in ~/.nightly-line (the repo's production/ is a mirror; it does not run).
+#
+#   tools/nl bigboard [--pre|--live|--all|--min-score N|NFL ...]   "big board"
+#   tools/nl check    [--live|--hours N|--strict]                   "check again"
+#   tools/nl macro    [econ|politics|crypto|finance] [--all] [--days N]  "macro board"
+#   tools/nl scorecard [--days N] [--model v1|v2] [--verbose]      "how are we doing"
+#   tools/nl picks    [--days N]                                    "how are the picks doing"
+#   tools/nl drift    [--hours N] [--all]                           "what moved"
+#   tools/nl who      <name or 0xwallet> [--positions]              "who is X"
+#   tools/nl review   [--days N] [--write]                          weekly live-ledger cuts
+#   tools/nl sync                                                   live code -> repo
+#
+# docs/commands.md says what each prints and how to read it.
+set -euo pipefail
+LIVE="$HOME/.nightly-line"
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+PY=/usr/bin/python3
+cmd="${1:-}"; shift || true
+cd "$LIVE"
+case "$cmd" in
+  bigboard|board)  exec $PY bigboard.py --wide "$@" ;;
+  check)           exec $PY check.py "$@" ;;
+  macro)           exec $PY macro.py "$@" ;;
+  scorecard|how)   exec $PY scorecard.py "$@" ;;
+  picks|record)    exec $PY picks.py --record "$@" ;;
+  drift|moved)     exec $PY drift.py "$@" ;;
+  who)             exec $PY who.py "$@" ;;
+  review)          exec $PY "$REPO/research/review.py" "$@" ;;
+  sync)            exec "$REPO/tools/sync-from-live.sh" "$@" ;;
+  *) sed -n '2,15p' "$0"; exit 1 ;;
+esac
