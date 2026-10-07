@@ -138,3 +138,20 @@ convert to ROI at T-60 (+0.06). Prior hold predicts CLV only.
 - **Prior:** trader CLV half-to-half rank corr +0.60; top quartile +1.14 → +0.74 pts; bottom −1.10 → −0.90
 - **Test:** on the 99 research windows, grade top-tier traders' in-window positions at **min(T-60 price, sharp's entry + 1 pt)** — i.e. only when a follower could have got within 1 pt of the entry — vs the pool at T-60. Pass: top-tier ROI interval excludes the pool mean in ≥ 3 sports with n ≥ 40 each, and bottom-tier in-window picks ≤ pool. Fail: no separation → tiers become an informational flag on the board only.
 - **Decision rule for `price_max`:** retire regardless (section 1 of the review); it is the same kind of sample as `price_min`.
+
+## Conviction score study 2026-10-07 (see `docs/reviews/2026-10-07-conviction-v5.md`)
+
+`research/score_v5.py`, 37 → 36 research windows chronological split, 18,124
+gated rows. No bet-time feature orders ROI out of sample; a fitted ROI model
+fails on test (Q5 −2.6%); v4 flips. **EXP-022 strengthened:** v4 80–89 is
+−12.5% [−23, −2] on the research test set and −19.3% [−38, −1] live; 70–79
+is the best band in both. **New:** a line-move model (dominant feature: drift
+toward the bet since entry) orders signal CLV monotonically out of sample
+(Q1 −3.15 → Q5 +2.55) and ROI at T-60 (−7.3% → −1.3%); bottom 60% lose 6–7%
+in every quintile. Saved as `research/linemove_v5.json`.
+
+### EXP-030 — Line-move tier: exclude "moving away", order alerts by expected move
+- **Status:** proposed, pre-registered · **Rule:** new column beside the score; bottom-60% tier = alert only at any price; top-40% first in the email. v4 kept as the gate; column renamed *Profile*.
+- **Prior:** research test, any price: top-40 −1.6% [−6, +2] vs bottom-60 −6.1% [−9, −3]; CLV +2.2 vs −0.9. Inside the window CLV separates, ROI does not (−3.0 vs −3.2) and flips by sport.
+- **Test (forward, live signals):** over the next 300 settled signals, "moving away" CLV < 0 and "moving toward" CLV > +1; pick-rule ROI of kept rows ≥ today's. Pass → the exclusion becomes a gate. Fail → informational only.
+- **Explicitly not proposed:** any new ROI-fitted score (third failure, third dataset).
