@@ -131,3 +131,19 @@ picks were 3-9.
 
 Rows 1–4 were installed 2026-10-07 on Santhosh's go-ahead (see the ledger). The rest wait; `docs/alert-rules.md` and the
 ledger get the entry when he does.
+
+## Addendum — independent rebuild of Oct 1–6 (football), finished 12:37
+
+| Cut | Wallets | Alerts | Picks | W-L | Flat ROI | s5 ROI | CLV |
+|---|---|---|---|---|---|---|---|
+| A (live gate) | 43 | 215 | 18 | 13-5 | +19.4% | +16.9% | −0.08 |
+| C (hold ≥ 3%) | 30 | 189 | 13 | 11-2 | +40.3% | +34.3% | −0.12 |
+
+15 games, 862 scored positions — **too thin for an interval**, and every
+strategy family reports "too few test bets". It agrees with the live ledger's
+Oct 4 weekend (rule-qualifying football suggestions 9-4) and with the window
+evaluation's finding that −122..−180 favourites held up while everything
+published around them did not. Signal CLV is again ≈ 0: the followers get the
+closing price. The MLB and NHL Oct 1–6 rebuilds are still running
+(`~/nl-research/oct_week1.log`); both are tiny windows (MLB postseason, NHL
+opening week).
