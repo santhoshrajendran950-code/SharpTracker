@@ -292,6 +292,10 @@ def main():
     for h in hits:
         h["conv"] = chk.conviction(h)
     chk.mark_consensus(hits)
+    if chk.LINEMOVE:
+        import linemove
+        for h in hits:
+            h["move_tier"], h["move"] = linemove.tier(h)     # EXP-030, same stamp as check.py
 
     bad, pool_n = len(badl), len(pool)
 

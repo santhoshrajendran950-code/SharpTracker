@@ -132,6 +132,9 @@ def qualifies(h):
         return False, "period market — cannot be settled"
     if contested(h):
         return False, f"contested — {h.get('opposed')} sharp(s) on the other side"
+    if LINEMOVE_GATE and not h.get("move_tier"):
+        import linemove                      # a row that arrived unstamped is scored here, never waved through
+        h["move_tier"], h["move"] = linemove.tier(h)
     if LINEMOVE_GATE and h.get("move_tier") in ("away", "flat"):
         # EXP-030 (2026-10-07): the bottom 60% by predicted line move lost 6-7%
         # in every out-of-sample quintile; only "toward" rows can be picks.
