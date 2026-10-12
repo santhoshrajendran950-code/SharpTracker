@@ -8,6 +8,8 @@ Place a graded pick on Novig as a limit order — PAPER exchange by default.
     place.py from-picks [--since-min 40] [--dry-run]    picks.jsonl -> orders
     place.py status                                    resting / positions / fills
     place.py cancel <orderId> | --all
+    place.py settle                                    grade filled orders (nightly)
+    place.py record                                    paper P&L from orders.jsonl
 
 Where the money goes
   NOVIG_HOST decides. Default https://api.paper.novig.com (play money).
@@ -317,6 +319,87 @@ def cmd_status(_a):
               f"cost ${float(f.get('cost') or 0):.2f} fee ${float(f.get('fee') or 0):.4f} {'taker' if f.get('taker') else 'maker'}")
 
 
+def save_orders(rows):
+    tmp = ORDERS.with_suffix(".tmp")
+    with open(tmp, "w") as f:
+        for r in rows:
+            f.write(json.dumps(r) + "\n")
+    tmp.replace(ORDERS)
+
+
+def cmd_settle(_a):
+    """Stamp every accepted order with its fill and, once graded, its result."""
+    key = novig._key("trade")
+    rows = load_orders()
+    todo = [r for r in rows if r.get("accepted") and not r.get("final") and r.get("host") == novig.HOST]
+    if not todo:
+        print("settle: nothing open")
+        return
+    hist = {}
+    after = None
+    for _ in range(20):
+        d = novig.call("GET", "/v3/history/positions", "limit=500" + (f"&after={after}" if after else ""), key=key)
+        for pos in _items(d):
+            hist[(pos.get("marketId"), pos.get("outcomeId"))] = pos
+        after = d.get("next") if isinstance(d, dict) else None
+        if not after:
+            break
+    graded = unfilled = 0
+    for r in todo:
+        try:
+            o = novig.call("GET", f"/v3/orders/{r['orderId']}", key=key)
+        except Exception as e:
+            print(f"  {r['orderId'][:8]} read failed: {e}")
+            continue
+        r["order_status"] = o.get("status")
+        r["filled"] = int(o.get("qty", 0)) - int(o.get("remaining", 0))
+        if r["filled"] == 0:
+            if o.get("status") in ("CANCELED", "REJECTED") or \
+                    datetime.fromisoformat(r["start"]) < datetime.now(timezone.utc) - timedelta(hours=1):
+                r["final"] = True
+                r["result"] = "unfilled"
+                unfilled += 1
+            continue
+        pos = hist.get((r["plan"]["marketId"], r["plan"]["outcomeId"]))
+        if not pos:
+            continue
+        r["cost"] = float(pos.get("cost") or 0)
+        res = (pos.get("result") or "TBD").upper()
+        if res != "TBD" and pos.get("status", "").upper() in ("FINALIZED", "SETTLED", "DETERMINED"):
+            r["result"] = {"WIN": "won", "LOSS": "lost", "LOSE": "lost"}.get(res, res.lower())
+            r["payout"] = float(pos.get("payout") or 0)
+            r["pnl"] = float(pos.get("pnl") or 0)
+            r["settled_ts"] = pos.get("settledTs")
+            r["final"] = True
+            graded += 1
+    save_orders(rows)
+    print(f"settle: {len(todo)} open, {graded} graded, {unfilled} unfilled, "
+          f"{len(todo) - graded - unfilled} still pending")
+
+
+def cmd_record(_a):
+    rows = [r for r in load_orders() if r.get("accepted") and r.get("host") == novig.HOST]
+    sent = len(rows)
+    done = [r for r in rows if r.get("final") and r.get("result") not in ("unfilled", None)]
+    unf = sum(1 for r in rows if r.get("result") == "unfilled")
+    pend = sent - len(done) - unf
+    stake = sum(r.get("cost", 0) for r in done)
+    pnl = sum(r.get("pnl", 0) for r in done)
+    w = sum(1 for r in done if r.get("result") == "won")
+    l = sum(1 for r in done if r.get("result") == "lost")
+    print(f"paper record on {novig.HOST}: {sent} orders sent · {unf} unfilled · {pend} pending · "
+          f"{w}-{l} settled{' (' + str(len(done) - w - l) + ' void)' if len(done) - w - l else ''}")
+    if done:
+        print(f"  staked ${stake:.2f} · P&L ${pnl:+.2f} · ROI {100 * pnl / stake:+.1f}%")
+        by = {}
+        for r in done:
+            k = r.get("league") or "?"
+            by.setdefault(k, [0, 0.0, 0.0])
+            by[k][0] += 1; by[k][1] += r.get("cost", 0); by[k][2] += r.get("pnl", 0)
+        for k, (n, st, pl) in sorted(by.items()):
+            print(f"  {k:<6} {n:>3} · ${st:.2f} · {pl:+.2f}")
+
+
 def cmd_cancel(a):
     key = novig._key("trade")
     if "--all" in a:
@@ -327,11 +410,12 @@ def cmd_cancel(a):
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
-    if not argv or argv[0] not in ("quote", "order", "from-picks", "status", "cancel"):
+    if not argv or argv[0] not in ("quote", "order", "from-picks", "status", "cancel", "settle", "record"):
         print(__doc__)
         sys.exit(1)
     guard_env(argv)
     print(f"[{'PAPER' if is_paper() else 'REAL'}] {novig.HOST}")
     rest = [x for x in argv[1:] if x != "--real"]
     {"quote": cmd_quote, "order": cmd_order, "from-picks": cmd_from_picks,
-     "status": cmd_status, "cancel": cmd_cancel}[argv[0]](rest)
+     "status": cmd_status, "cancel": cmd_cancel, "settle": cmd_settle,
+     "record": cmd_record}[argv[0]](rest)

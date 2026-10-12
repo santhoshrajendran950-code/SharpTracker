@@ -213,6 +213,14 @@ paper, $500 funded. `place.py order … Bills "Spread: Bills +3.5" --units 1
 `cancel --all` removed it. `status` shows balance, resting orders,
 positions and fills.
 
+**Scheduled 2026-10-12 (his "schedule it"):** `run-place.sh` under
+`com.nightlyline.place` every 10 min at :04 from 09:04 to 23:54, pinned to
+the paper host, runs `place.py from-picks --since-min 25`; `com.nightlyline.placesettle`
+at 06:50 runs `place.py settle` (stamps fills and, once Novig grades the
+position, result/pnl) and `place.py record` (paper P&L, by league) into
+`place.log`. `orders.jsonl` is private and never synced. Real money stays
+a separate, manual step.
+
 **Also found:** `/v3/public/catalog/*` and `/v3/public/types/*` answer
 without any signature on both hosts, so quotes do not strictly need a key.
 `novig.py` keeps using the signed routes (own throttle bucket).

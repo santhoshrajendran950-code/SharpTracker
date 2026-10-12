@@ -207,3 +207,12 @@ this file from the live ledger.
 - The 14-day replay (20-7, +29.9%) is in-sample and is not a record.
 - Crypto dailies: no persistent-skill crowd; port failed its gate 2026-09-15.
 - Kalshi: no public trader identity; nothing to port.
+
+## Paper execution (2026-10-12)
+
+Every published pick is also paper-traded on Novig's play-money exchange
+(`production/place.py`, `com.nightlyline.place`): 1u = $10, cap $50/order and
+$200/day, the pick's odds are the worst price accepted (+0.005), take if the
+book is inside that else rest as a maker until kickoff. Graded nightly from
+Novig's position history. This measures fill rate and realised price against
+the graded price; it changes no alert rule. See `docs/exchange-apis.md`.
