@@ -148,6 +148,67 @@ Location checks (production only): every signed call refuses VPN/proxy IPs
 and Arizona, Michigan and Nevada with a `451`. Reads are admitted even when
 the phone's companion geolocation is stale; placements are not.
 
+### Placing orders: `place.py` (paper exchange by default)
+
+Added 2026-10-12 evening. `production/place.py` turns a graded pick into a
+Novig limit order. It is pointed at **paper.novig.com** unless both `--real`
+is on the command line and `NOVIG_REAL=1` is in the environment; otherwise it
+exits before signing anything.
+
+```
+place.py quote  NFL "Buffalo Bills vs Los Angeles Rams" Bills "Spread: Bills +3.5" 2026-10-13T00:15Z
+place.py order  NFL "Buffalo Bills vs Los Angeles Rams" Bills "Spread: Bills +3.5" 2026-10-13T00:15Z --units 1 --odds -113 [--dry-run]
+place.py from-picks [--since-min 40] [--dry-run]      new picks.jsonl rows -> orders
+place.py status | cancel <orderId> | cancel --all
+```
+
+How it prices: the pick's `odds` is the worst price accepted (`prob_max` =
+implied probability + `slack`, default 0.005). If the best resting offer on
+the other outcome gives a price at or under that, the order **takes** it
+(pregame takers pay no fee on game markets, `fee.charged == WHEN_LIVE`).
+Otherwise it **rests** at `prob_max` as a maker. The exchange cancels every
+resting order at go-live, so a GTC order can never fill in-game. Prices are
+snapped down to Novig's grid (0.005 steps mid-range); `qty` is in 1-cent
+contracts, so $10 at 0.530 is 1,886 contracts.
+
+Hard limits live in `~/.nightly-line/place.json` (defaults: `unit_dollars`
+10, `max_order_dollars` 50, `max_day_dollars` 200, `slack` 0.005, US leagues
+only). Every attempt is appended to `orders.jsonl` with the plan, the book
+seen, the request and the answer; a pick (`slug|pick`) is never sent twice,
+because Novig's `clientId` is a label, not an idempotency key.
+
+Dry-run planner output against live production books, 2026-10-12 evening:
+
+| Row | Pick odds | Book | Decision |
+|---|---|---|---|
+| Bills +3.5 | -113 | 0.530 (-113), $109K | TAKE 1,886 @ 0.530 = $10.00 |
+| Bills ML | +170 | 0.390 (+156) | REST 5,333 @ 0.375 (+167) = $20.00 |
+| Guardians +1.5 | -150 | 0.590 (-144), $14K | TAKE 1,694 @ 0.590 = $9.99 |
+| Knights ML, 6u | -110 | — | refused: $60 > max_order_dollars |
+
+**Paper setup (one time).** Keys are per environment, so Paper needs its own:
+
+1. Sign up at <https://paper.novig.com> (no identity check; press *Fill in
+   KYC Data, Accept all Terms, and Start with $10,000*).
+2. Profile → Settings → Novig API → Create Key, same as production. Keep the
+   downloaded PEM and the key ID.
+3. ```
+   NOVIG_HOST=https://api.paper.novig.com python3 ~/.nightly-line/novig.py setup <KEY_ID> <pem> sharptracker --trading --fund 500
+   ```
+   `--trading` keeps the subaccount's trading key on the Mac (it is play
+   money); `--fund 500` moves $500 of it into the subaccount. Keys land in
+   the Keychain as `novig/*-paper` and PEMs as `.novig-*-paper.pem`.
+4. `NOVIG_HOST=https://api.paper.novig.com python3 ~/.nightly-line/place.py status`
+
+To go live later you would repeat step 3 against production **without**
+`--fund` first, fund by hand, and run `place.py` with `--real` and
+`NOVIG_REAL=1`. Production placements also need the Novig phone app to have
+geolocated within 3 days.
+
+**Also found:** `/v3/public/catalog/*` and `/v3/public/types/*` answer
+without any signature on both hosts, so quotes do not strictly need a key.
+`novig.py` keeps using the signed routes (own throttle bucket).
+
 ### Public data (no key)
 
 Novig publishes anonymised daily CSVs at `https://data.novig.com/reporting/trade-data/`

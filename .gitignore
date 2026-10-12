@@ -5,6 +5,7 @@
 bets.jsonl
 signals.jsonl
 picks.jsonl
+orders.jsonl
 alerts-posted.jsonl
 ledgers/
 lines/

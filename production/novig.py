@@ -11,8 +11,11 @@ packages, in keeping with the rest of ~/.nightly-line. The signature covers:
 Headers: Novig-Key-Id, Novig-Timestamp, Novig-Signature.  Clock skew ±30 s.
 
 Hosts:   NOVIG_HOST  (default https://api.novig.com; paper = https://api.paper.novig.com)
-Key id:  $NOVIG_KEY_ID   or keychain -s novig -a key-id
-PEM:     $NOVIG_PEM      or ~/.nightly-line/.novig-read.pem   (chmod 600)
+Keys are per environment ('-paper' suffix on Paper):
+  read   keychain novig/key-id[-paper]        ~/.nightly-line/.novig-read[-paper].pem
+  trade  keychain novig/trade-key-id[-paper]  ~/.nightly-line/.novig-trade[-paper].pem
+  mgmt   keychain novig/mgmt-key-id[-paper]   ~/.nightly-line/.novig-mgmt[-paper].pem
+($NOVIG_KEY_ID / $NOVIG_PEM override the read key.)
 
 The key used here should be a `trading::read` key — it can read the catalog
 and order books but can never place an order or move money. `python3 novig.py
@@ -31,7 +34,8 @@ Public surface used by books.py:
 
     python3 novig.py                  smoke test: echo + leagues + 3 NFL markets
     python3 novig.py NFL              list live markets for a league
-    python3 novig.py setup MGMT_ID MGMT.pem [label]   create a read-only key
+    python3 novig.py setup MGMT_ID MGMT.pem [label] [--trading] [--fund N]
+    python3 novig.py fund 100 | balance               (management key)
     python3 novig.py public 2026-10-11                 download that day's CSVs
 """
 import base64, hashlib, json, os, re, subprocess, sys, tempfile, time
@@ -44,7 +48,7 @@ from exkeys import get, describe, NotConfigured  # noqa: E402
 
 LABEL = "NOVIG"
 HOST = os.environ.get("NOVIG_HOST", "https://api.novig.com")
-PEM_DEFAULT = Path.home() / ".nightly-line" / ".novig-read.pem"
+HOME = Path.home() / ".nightly-line"
 PUBLIC = "https://data.novig.com/reporting/trade-data"
 OPENSSL = next((p for p in ("/opt/homebrew/bin/openssl", "/usr/local/bin/openssl",
                             "/usr/bin/openssl") if Path(p).exists()), "openssl")
@@ -58,20 +62,43 @@ _cache, _types = {}, {}
 
 
 # ---------------------------------------------------------------- credentials
-def _key():
-    kid = get("novig", "key-id", env="NOVIG_KEY_ID")
-    pem = os.environ.get("NOVIG_PEM") or str(PEM_DEFAULT)
-    if not kid or not Path(pem).exists():
+def _sfx():
+    """Keys are per environment: '-paper' names the play-money set."""
+    return "-paper" if "paper" in HOST else ""
+
+
+KEY_FILES = {   # scope -> (keychain account, PEM file)   (+ env suffix)
+    "read":  ("key-id",       ".novig-read{sfx}.pem"),
+    "trade": ("trade-key-id", ".novig-trade{sfx}.pem"),
+    "mgmt":  ("mgmt-key-id",  ".novig-mgmt{sfx}.pem"),
+}
+
+
+def _key(scope="read"):
+    acct, pem = KEY_FILES[scope]
+    sfx = _sfx()
+    if scope == "read":
+        kid = get("novig", acct + sfx, env="NOVIG_KEY_ID")
+        pemp = os.environ.get("NOVIG_PEM") or str(HOME / pem.format(sfx=sfx))
+    else:
+        kid = get("novig", acct + sfx)
+        pemp = str(HOME / pem.format(sfx=sfx))
+    if not kid or not Path(pemp).exists():
         raise NotConfigured(
-            "Novig: no key. Need a key id (security add-generic-password -U -a key-id "
-            f"-s novig -w <id>) and a PEM at {pem}. See docs/exchange-apis.md.")
-    return kid, pem
+            f"Novig: no {scope} key for {HOST}. Need keychain novig/{acct}{sfx} and {pemp}. "
+            "See docs/exchange-apis.md.")
+    return kid, pemp
 
 
 def status():
-    kid = describe("novig", "key-id", env="NOVIG_KEY_ID")
-    pem = os.environ.get("NOVIG_PEM") or str(PEM_DEFAULT)
-    return f"novig: host={HOST} key-id={kid} pem={'present' if Path(pem).exists() else 'missing'}"
+    out = [f"novig: host={HOST}"]
+    for scope in ("read", "trade", "mgmt"):
+        try:
+            _key(scope)
+            out.append(f"{scope}=present")
+        except NotConfigured:
+            out.append(f"{scope}=missing")
+    return " ".join(out)
 
 
 # ------------------------------------------------------------------- signing
@@ -219,6 +246,26 @@ def catalog_markets(league, start=None, window_h=3, market_type=None, limit=5000
 
 def book(market_id):
     return _get(f"/v3/catalog/markets/{market_id}/book")
+
+
+def snap_down(prob):
+    """Model probability -> the nearest allowed grid price at or below it, as the
+    3-place string the API wants. Grid: 0.001 steps in (0,0.05] and [0.95,1),
+    0.005 steps between. None if off the grid entirely."""
+    milli = int(round(prob * 1000))
+    if 1 <= milli <= 50 or 950 <= milli <= 999:
+        pass
+    elif 51 <= milli <= 949:
+        milli -= milli % 5
+    else:
+        return None
+    return f"{milli / 1000:.3f}"
+
+
+def prob_of(american_odds):
+    """American odds -> implied probability (cost per $1 contract)."""
+    a = float(american_odds)
+    return (-a) / (-a + 100) if a < 0 else 100 / (a + 100)
 
 
 def american(prob):
@@ -403,19 +450,23 @@ def public_csv(date, which, dest_dir):
 
 
 # ------------------------------------------------------------------- setup
-def setup(mgmt_id, mgmt_pem, label="sharptracker"):
-    """One-time: open a subaccount and give it a trading::read key for this Mac.
+def setup(mgmt_id, mgmt_pem, label="sharptracker", keep_trading=False, fund_amount=None):
+    """One-time per environment: open a subaccount and key this Mac for it.
 
-    The management key is used ONLY here. The trading key created alongside the
-    subaccount is generated to a temp file and destroyed — we never want a key
-    on this machine that can place orders.
+    Always: a `trading::read` key (quotes only). With keep_trading: the
+    subaccount's `trading` key is kept too, so place.py can send orders — on
+    Paper that is the point; on Production think twice. The management key is
+    used only here and stored (id in Keychain, PEM beside the others) so
+    `fund` can top the subaccount up later.
     """
+    sfx = _sfx()
     mgmt = (mgmt_id, mgmt_pem)
     echo = call("POST", "/v3/echo", body={"ping": "sharptracker"}, key=mgmt)
     if echo.get("ping") != "sharptracker":
         raise RuntimeError(f"echo failed: {echo}")
-    print("echo ok — management key, clock and signer are all good")
+    print(f"echo ok on {HOST} — management key, clock and signer are all good")
 
+    HOME.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp())
     trade_pem, trade_pub = tmp / "trade.pem", tmp / "trade.pub.pem"
     subprocess.run([OPENSSL, "genpkey", "-algorithm", "ed25519", "-out", str(trade_pem)], check=True)
@@ -426,36 +477,88 @@ def setup(mgmt_id, mgmt_pem, label="sharptracker"):
     if not sub:
         raise RuntimeError(f"subaccount open failed: {opened}")
     print(f"subaccount '{label}' opened — id {sub}")
+    if keep_trading:
+        dest = HOME / KEY_FILES["trade"][1].format(sfx=sfx)
+        dest.write_bytes(trade_pem.read_bytes()); dest.chmod(0o600)
+        subprocess.run(["security", "add-generic-password", "-U", "-a", KEY_FILES["trade"][0] + sfx,
+                        "-s", "novig", "-w", sub], check=True)
+        print(f"TRADING key kept: keychain novig/trade-key-id{sfx}, PEM {dest}")
+    else:
+        print("trading key material destroyed (this Mac keeps read-only access only)")
     for f in (trade_pem, trade_pub):
         f.unlink()
     tmp.rmdir()
-    print("trading key material destroyed (this Mac keeps read-only access only)")
 
-    PEM_DEFAULT.parent.mkdir(parents=True, exist_ok=True)
-    pub = PEM_DEFAULT.with_suffix(".pub.pem")
-    subprocess.run([OPENSSL, "genpkey", "-algorithm", "ed25519", "-out", str(PEM_DEFAULT)], check=True)
-    PEM_DEFAULT.chmod(0o600)
-    subprocess.run([OPENSSL, "pkey", "-in", str(PEM_DEFAULT), "-pubout", "-out", str(pub)], check=True)
+    read_pem = HOME / KEY_FILES["read"][1].format(sfx=sfx)
+    pub = read_pem.with_suffix(".pub.pem")
+    subprocess.run([OPENSSL, "genpkey", "-algorithm", "ed25519", "-out", str(read_pem)], check=True)
+    read_pem.chmod(0o600)
+    subprocess.run([OPENSSL, "pkey", "-in", str(read_pem), "-pubout", "-out", str(pub)], check=True)
     created = call("POST", f"/v3/account/subaccounts/{sub}/keys", key=mgmt, body={
         "name": f"{label}-read", "publicKey": pub.read_text(),
         "algorithm": "Ed25519", "scope": "trading::read"})
     kid = created.get("keyId")
     if not kid:
         raise RuntimeError(f"read key creation failed: {created}")
-    subprocess.run(["security", "add-generic-password", "-U", "-a", "key-id", "-s", "novig",
-                    "-w", kid], check=True)
-    print(f"read key created and stored: keychain novig/key-id, PEM {PEM_DEFAULT}")
+    subprocess.run(["security", "add-generic-password", "-U", "-a", KEY_FILES["read"][0] + sfx,
+                    "-s", "novig", "-w", kid], check=True)
+    print(f"read key created and stored: keychain novig/key-id{sfx}, PEM {read_pem}")
+
+    mdest = HOME / KEY_FILES["mgmt"][1].format(sfx=sfx)
+    if Path(mgmt_pem).resolve() != mdest.resolve():
+        mdest.write_bytes(Path(mgmt_pem).read_bytes()); mdest.chmod(0o600)
+    subprocess.run(["security", "add-generic-password", "-U", "-a", KEY_FILES["mgmt"][0] + sfx,
+                    "-s", "novig", "-w", mgmt_id], check=True)
+    print(f"management key stored: keychain novig/mgmt-key-id{sfx}, PEM {mdest}")
+    if fund_amount:
+        fund(fund_amount, sub=sub, mgmt=mgmt)
     print("now run:  python3 novig.py   (smoke test with the read key)")
+
+
+def fund(amount, sub=None, mgmt=None, direction="fund"):
+    """Move play/real money between the cash wallet and the subaccount."""
+    mgmt = mgmt or _key("mgmt")
+    sub = sub or _key("trade")[0]
+    cid = f"{direction}-{sub[:8]}-{int(time.time())}"
+    r = call("POST", f"/v3/account/subaccounts/{sub}/transfer", key=mgmt, body={
+        "direction": direction, "amount": f"{float(amount):.5f}", "clientTransferId": cid})
+    tid = r.get("transferId")
+    for _ in range(10):
+        if r.get("status") in ("Applied", "Rejected"):
+            break
+        time.sleep(1)
+        r = call("GET", f"/v3/account/subaccounts/{sub}/transfers/{tid}", key=mgmt)
+    print(f"transfer {direction} ${float(amount):.2f}: {r.get('status')}"
+          + (f" (balance found {r.get('actualBalance')})" if r.get("status") == "Rejected" else ""))
+    return r
+
+
+def balance(sub=None):
+    mgmt = _key("mgmt")
+    sub = sub or _key("trade")[0]
+    return call("GET", f"/v3/account/subaccounts/{sub}/balance", key=mgmt).get("balance")
 
 
 # --------------------------------------------------------------------- cli
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[:1] == ["setup"]:
-        if len(args) < 3:
-            print("usage: novig.py setup <MGMT_KEY_ID> <mgmt.pem> [label]")
+        flags = [a for a in args if a.startswith("--")]
+        pos = [a for a in args[1:] if not a.startswith("--")]
+        if len(pos) < 2:
+            print("usage: novig.py setup <MGMT_KEY_ID> <mgmt.pem> [label] [--trading] [--fund N]")
             sys.exit(1)
-        setup(args[1], args[2], *(args[3:4]))
+        famt = None
+        for i, a in enumerate(args):
+            if a == "--fund":
+                famt = args[i + 1]; pos = [x for x in pos if x != famt]
+        setup(pos[0], pos[1], *(pos[2:3]), keep_trading="--trading" in flags, fund_amount=famt)
+        sys.exit(0)
+    if args[:1] == ["fund"]:
+        fund(args[1], direction=args[2] if len(args) > 2 else "fund")
+        sys.exit(0)
+    if args[:1] == ["balance"]:
+        print(f"subaccount balance on {HOST}: ${float(balance()):.2f}")
         sys.exit(0)
     if args[:1] == ["public"]:
         date = args[1] if len(args) > 1 else None
@@ -470,7 +573,7 @@ if __name__ == "__main__":
         sys.exit(0)
     print(status())
     try:
-        _key()
+        _key("read")
     except NotConfigured as e:
         print(e)
         sys.exit(2)
