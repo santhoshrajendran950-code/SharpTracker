@@ -172,7 +172,9 @@ def types(kind):
     """Strings Novig accepts for `league` / `markets` filters."""
     if kind not in _types:
         d = _get(f"/v3/types/{kind}")
-        _types[kind] = sorted(set(_flatten(d.get("items", d))))
+        if isinstance(d, dict):
+            d = d.get("items", d)
+        _types[kind] = sorted(set(_flatten(d)))
     return _types[kind]
 
 
@@ -250,45 +252,92 @@ def _line(h):
     return float(m.group(1)) if m else None
 
 
-def _home_of(desc):
-    """'Chiefs at Bills — Moneyline' -> 'Bills'; None if the form is unknown."""
-    m = re.match(r"(.+?)\s+(?:at|@)\s+(.+?)(?:\s+[—-]\s+.*)?$", desc or "")
-    return m.group(2).strip() if m else None
+def _abbr_match(abbr, fullname):
+    """'BUF' ~ 'Buffalo Bills', 'LAR' ~ 'Los Angeles Rams', 'NYJ' ~ 'New York Jets'."""
+    a = re.sub(r"[^A-Z]", "", (abbr or "").upper())
+    words = [w for w in re.split(r"\s+", fullname or "") if w]
+    if not a or not words:
+        return False
+    initials = "".join(w[0] for w in words).upper()
+    joined = "".join(words).upper()
+    return (initials.startswith(a) or joined.startswith(a)
+            or any(w.upper().startswith(a) for w in words)
+            or (len(a) >= 3 and a[:2] == initials[:2] and a[2] == words[-1][0].upper()))
+
+
+def _qty_dollars(qty, price):
+    """Resting qty is in hundredths of a $1 contract; stake capacity for the taker."""
+    try:
+        return round(float(qty) / 100 * price, 2)
+    except Exception:
+        return None
 
 
 def _best_price_for(bk, outcome_id, other_ids):
-    """What a taker pays for `outcome_id`: 1 - best resting bid on the other side."""
+    """What a taker pays for `outcome_id`: 1 - best resting bid on the other side.
+
+    Returns (probability, dollars available at that price)."""
     orders = (bk.get("book") or bk).get("orders") or {}
-    best, qty = None, 0
+    best, qty = None, 0.0
     for oid in other_ids:
         ladder = orders.get(oid) or []
-        if ladder:
-            top = ladder[0]                     # arrays are best-first by spec
-            p = float(top["price"])
-            if best is None or p > best:
-                best, qty = p, top.get("qty", 0)
+        if not ladder:
+            continue
+        p = float(ladder[0]["price"])                 # arrays are best-first
+        q = sum(float(o.get("qty") or 0) for o in ladder if float(o["price"]) == p)
+        if best is None or p > best:
+            best, qty = p, q
     if best is None:
         return None, 0
-    return 1 - best, qty
+    prob = 1 - best
+    return prob, _qty_dollars(qty, prob)
+
+
+def events_in_window(league, start, window_h=3):
+    lo = int((start - timedelta(hours=window_h)).timestamp() * 1000)
+    hi = int((start + timedelta(hours=window_h)).timestamp() * 1000)
+    d = _get("/v3/catalog/events", f"league={league}&startsAfter={lo}&startsBefore={hi}&limit=500")
+    return d.get("items") or []
+
+
+def find_event(h):
+    """Novig event for a board row: same two teams, start within 3h.
+
+    Returns (event, home_name, away_name). Descriptions read 'Away @ Home'
+    for US sports and 'A vs. B' for tennis."""
+    league = league_for(h.get("league") or "")
+    if not league or h.get("start") is None:
+        return None, None, None
+    parts = re.split(r"\s+vs\.?\s+", h.get("game") or "", maxsplit=1)
+    want_a, want_b = parts[0], (parts[1] if len(parts) > 1 else "")
+    for ev in events_in_window(league, h["start"]):
+        if (ev.get("status") or "").upper() not in ("OPEN_PREGAME", "OPEN_INGAME", "DELAYED"):
+            continue
+        desc = ev.get("description") or ""
+        m = re.match(r"(.+?)\s+(@|at|vs\.?)\s+(.+)$", desc)
+        if not m:
+            continue
+        x, sep, y = m.group(1).strip(), m.group(2), m.group(3).strip()
+        if not ((_team_match(want_a, x) and _team_match(want_b, y))
+                or (_team_match(want_a, y) and _team_match(want_b, x))):
+            continue
+        home, away = (y, x) if sep.startswith("@") or sep == "at" else (None, None)
+        return ev, home, away
+    return None, None, None
 
 
 def prices_for(h):
-    """[(label, american_odds, available_qty)] for the row's side, or []."""
-    league = league_for(h.get("league") or "")
-    if not league:
+    """[(label, american_odds, dollars_available)] for the row's side, or []."""
+    ev, home, away = find_event(h)
+    if not ev:
         return []
     kind = _market_kind(h)
     mtype = market_type_for(kind)
     line = _line(h) if kind != "h2h" else None
-    parts = re.split(r"\s+vs\.?\s+", h.get("game") or "", maxsplit=1)
-    want_a, want_b = parts[0], (parts[1] if len(parts) > 1 else "")
-    for m in catalog_markets(league, h.get("start"), market_type=mtype):
-        if (m.get("status") or "OPEN").upper() not in ("OPEN", "ACTIVE"):
-            continue
-        desc = m.get("description") or ""
-        names = [o.get("name") or "" for o in m.get("outcomes") or []]
-        hay = " ".join([desc] + names)
-        if not (_team_match(want_a, hay) and _team_match(want_b, hay)):
+    side = h.get("side") or ""
+    d = _get("/v3/catalog/markets", f"event={ev['eventId']}&marketType={mtype}&limit=500")
+    for m in d.get("items") or []:
+        if (m.get("status") or "OPEN").upper() != "OPEN":
             continue
         if line is not None:
             st = m.get("strike")
@@ -298,26 +347,38 @@ def prices_for(h):
             if kind == "totals":
                 if abs(st - abs(line)) > 0.01:
                     continue
-            else:                                # strike = HOME side's handicap
-                home = _home_of(desc)
-                mine = line if (home and _team_match(h["side"], home)) else -line
-                if abs(st - mine) > 0.01:
+            else:                                   # strike = HOME side's handicap
+                side_is_home = bool(home) and _team_match(side, home)
+                if abs(st - (line if side_is_home else -line)) > 0.01:
                     continue
-        mine_id, others = None, []
-        for o in m.get("outcomes") or []:
-            nm = o.get("name") or ""
-            ok = (nm.lower() == h["side"].lower()) if kind == "totals" \
-                else _team_match(h["side"], nm)
-            if ok and mine_id is None:
-                mine_id = o["outcomeId"]
-            else:
-                others.append(o["outcomeId"])
-        if mine_id is None or not others:
+        outs = m.get("outcomes") or []
+        if len(outs) != 2:
             continue
-        prob, qty = _best_price_for(book(m["marketId"]), mine_id, others)
+        mine = None
+        if kind == "totals":
+            for o in outs:
+                if (o.get("name") or "").lower().startswith(side.lower()):
+                    mine = o
+        else:
+            # outcome names are abbreviations ('BUF -3.5'); resolve by matching
+            # our team, else by eliminating the opponent
+            other = away if (home and _team_match(side, home)) else home
+            for o in outs:
+                ab = (o.get("name") or "").split()[0]
+                if _abbr_match(ab, side) or (home and away and
+                                             _abbr_match(ab, home if _team_match(side, home) else away)):
+                    mine = o
+                    break
+            if mine is None and other:
+                rest = [o for o in outs if not _abbr_match((o.get("name") or "").split()[0], other)]
+                mine = rest[0] if len(rest) == 1 else None
+        if mine is None:
+            continue
+        others = [o["outcomeId"] for o in outs if o["outcomeId"] != mine["outcomeId"]]
+        prob, avail = _best_price_for(book(m["marketId"]), mine["outcomeId"], others)
         if prob is None or not 0 < prob < 1:
-            return []                            # listed but no resting liquidity
-        return [(LABEL, american(prob), qty)]
+            return []                               # listed, no resting liquidity
+        return [(LABEL, american(prob), avail)]
     return []
 
 
@@ -420,9 +481,10 @@ if __name__ == "__main__":
     print("leagues:", ", ".join(types("leagues")[:30]))
     print("market types:", ", ".join(types("markets")[:30]))
     league = args[0] if args else "NFL"
-    ms = catalog_markets(league_for(league) or league, limit=200)
-    print(f"{league}: {len(ms)} open markets")
-    for m in ms[:3]:
+    ms = [m for mt in ("MONEY", "SPREAD", "TOTAL")
+          for m in catalog_markets(league_for(league) or league, market_type=mt, limit=100)]
+    print(f"{league}: {len(ms)} open moneyline/spread/total markets (first 100 of each)")
+    for m in ms[:2] + ms[-2:]:
         bk = book(m["marketId"])
         orders = (bk.get("book") or bk).get("orders") or {}
         depth = {o.get("name"): len(orders.get(o["outcomeId"]) or []) for o in m.get("outcomes") or []}

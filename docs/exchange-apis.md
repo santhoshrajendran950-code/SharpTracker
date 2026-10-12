@@ -116,12 +116,33 @@ Mac will hold.
    ```
 5. Nothing else to configure. `books.py` picks the key up on the next board.
 
-Endpoints used: `GET /v3/types/leagues`, `GET /v3/types/markets`,
-`GET /v3/catalog/markets?league=&marketType=&startsAfter=&startsBefore=`,
-`GET /v3/catalog/markets/{id}/book`. Prices are probabilities; the taker price
-for a side is `1 - best resting bid on the other outcome`, converted to
-American odds. Spread `strike` is the home side's handicap. Read throttle:
-64-request burst refilling at 16 a second; `429` carries `Retry-After`.
+**Status 2026-10-12: live.** Management key `sharptracker-mgmt` created on
+novig.com, subaccount `sharptracker` opened, `trading::read` key stored in the
+Keychain. Verified against the real API on NFL, MLB and NHL rows; every direct
+quote matched the Odds API's Novig price to the cent, with a dollars-available
+figure the aggregator cannot give.
+
+What the real API looks like (differs from the docs' examples):
+
+- `GET /v3/types/leagues` returns a bare list: `NFL, NBA, MLB, NHL, NCAAF,
+  NCAAB, WNBA, ATP, WTA, EPL, …`. Market types `MONEY, SPREAD, TOTAL` plus
+  `MONEY_1H`, `SPREAD_1H`, `TOTAL_1H`, `TEAM_TOTAL` and hundreds of props.
+- Markets carry only abbreviations: moneyline description `LAR`, outcomes
+  `LAR` / `BUF`; spread `LAR -3.5` with outcomes `LAR -3.5` / `BUF +3.5`
+  (one market per line, `strike` is the home handicap); total `BUF @ LAR t54.5`
+  with outcomes `Over 54.5` / `Under 54.5`. Full names are on the event:
+  `GET /v3/catalog/events?league=&startsAfter=&startsBefore=` gives
+  `description: "Buffalo Bills @ Los Angeles Rams"` (away @ home).
+  `novig.py` therefore matches the event first, then
+  `GET /v3/catalog/markets?event=<id>&marketType=`, then resolves the outcome
+  by abbreviation (initials / prefix heuristic, falling back to eliminating
+  the opponent, which covers `JAX`, `WSH`).
+- `GET /v3/catalog/markets/{id}/book` returns `{marketId, seq, orders: {outcomeId: [{orderId, price, qty}]}}`,
+  best first. `qty` is in hundredths of a $1 contract. The taker price for a
+  side is `1 - best resting bid on the other outcome`; the dollars available
+  at that price are `sum(qty at best) / 100 × price`.
+- Read throttle: 64-request burst refilling at 16 a second; `429` carries
+  `Retry-After`.
 
 Location checks (production only): every signed call refuses VPN/proxy IPs
 and Arizona, Michigan and Nevada with a `451`. Reads are admitted even when
@@ -147,6 +168,7 @@ available.
 | `production/exkeys.py` | env → Keychain → file credential lookup | yes |
 | `production/prophetx.py`, `production/novig.py` | the clients | yes |
 | `~/.nightly-line/.novig-read.pem`, `.novig-read.pub.pem` | Novig read-only keypair | never (`*.pem` ignored) |
+| `~/.nightly-line/.novig-mgmt.pem` | Novig management key (can move funds; used only by `setup`) | never; belongs in a password manager, not on the Mac |
 | `~/.nightly-line/.prophetx-session` | cached ProphetX bearer token | never |
 | Keychain `prophetx/{affiliate,access,secret}`, `novig/key-id` | the keys | n/a |
 
