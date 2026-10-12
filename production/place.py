@@ -291,25 +291,26 @@ def cmd_from_picks(a):
     print(f"{n} candidate pick(s), {sent} order(s) sent")
 
 
+def _items(d):
+    return d if isinstance(d, list) else (d.get("items") or d.get("open") or [])
+
+
 def cmd_status(_a):
     key = novig._key("trade")
     try:
         print(f"balance: ${float(novig.balance()):.2f}")
     except NotConfigured:
         pass
-    resting = novig.call("GET", "/v3/orders", key=key)
-    items = resting.get("items", resting if isinstance(resting, list) else [])
+    items = _items(novig.call("GET", "/v3/orders", key=key))
     print(f"resting orders: {len(items)}")
     for o in items:
         print(f"  {o.get('orderId')} {o.get('outcomeId','')[:8]} {o.get('qty')}@{o.get('price')} "
               f"remaining {o.get('remaining')} {o.get('status')}")
-    pos = novig.call("GET", "/v3/portfolio/positions", key=key)
-    pos = pos.get("items", pos if isinstance(pos, list) else [])
+    pos = _items(novig.call("GET", "/v3/portfolio/positions", key=key))
     print(f"positions: {len(pos)}")
     for p in pos:
         print(f"  {p.get('marketId','')[:8]} {p.get('outcomeId','')[:8]} {p.get('qty')} contracts, cost ${float(p.get('cost') or 0):.2f}")
-    fills = novig.call("GET", "/v3/portfolio/fills", "limit=10", key=key)
-    fills = fills.get("items", fills if isinstance(fills, list) else [])
+    fills = _items(novig.call("GET", "/v3/portfolio/fills", "limit=10", key=key))
     print(f"last fills: {len(fills)}")
     for f in fills:
         print(f"  {datetime.fromtimestamp(f['ts']/1000, timezone.utc):%m-%d %H:%M} {f.get('qty')} "

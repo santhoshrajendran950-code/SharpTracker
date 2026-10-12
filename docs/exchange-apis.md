@@ -205,6 +205,14 @@ To go live later you would repeat step 3 against production **without**
 `NOVIG_REAL=1`. Production placements also need the Novig phone app to have
 geolocated within 3 days.
 
+**Paper run 2026-10-12 20:44 UTC (done):** subaccount `sharptracker` on
+paper, $500 funded. `place.py order … Bills "Spread: Bills +3.5" --units 1
+--odds -113` took 1,941 contracts at 0.515 (-106) for $9.996, fee $0.0000
+(pregame taker). A second identical command was refused by the ledger. A
+2u Bills ML order with a +170 ceiling rested at 0.375 as a maker and
+`cancel --all` removed it. `status` shows balance, resting orders,
+positions and fills.
+
 **Also found:** `/v3/public/catalog/*` and `/v3/public/types/*` answer
 without any signature on both hosts, so quotes do not strictly need a key.
 `novig.py` keeps using the signed routes (own throttle bucket).
