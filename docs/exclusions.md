@@ -8,6 +8,7 @@ secret, personal, or the proprietary edge itself.
 | `bets.jsonl` | The operator's personal bet log — stakes in dollars, books, results. Terminal-only by standing rule; it never leaves the machine. |
 | `.anon-salt` | The salt behind every public trader codename (`production/anon.py`). With it, every "Cobalt Harrier" on X maps back to a wallet. |
 | `.odds-key`, X/Discord credentials | Never stored in files; resolved from env or Keychain. Nothing to commit. |
+| `.novig-read.pem`, `.prophetx-session`, Keychain `prophetx/*`, `novig/key-id` | Exchange API keys (docs/exchange-apis.md). The PEM and token cache live under `~/.nightly-line`, never in the repo. |
 | `signals.jsonl`, `ledgers/`, `picks.jsonl`, `alerts-posted.jsonl` | Raw signal and pick ledgers carry real Polymarket usernames and wallet addresses. Per `anon.py`: "the wallet identities are the whole edge." |
 | `trusted.json`, `discovered.json` | Real usernames + the notes justifying each override; wallet addresses found by the daily sweep. |
 | `check-snapshot.json`, `*-snapshot.json` | Live position snapshots — wallets, sizes, entries. |

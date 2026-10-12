@@ -14,6 +14,10 @@ discovered.json
 *snapshot*.json
 .anon-salt
 .odds-key
+*.pem
+.novig-*
+.prophetx-session
+novig-public/
 *.env
 !*.env.example
 

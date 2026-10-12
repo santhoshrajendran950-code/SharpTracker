@@ -10,12 +10,13 @@ this and the Polymarket scan.
 
 Key is read via oddskey.py (keychain) and never printed.
 """
-import json, re, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oddskey import get_key
+from exkeys import NotConfigured
 
 BASE = "https://api.the-odds-api.com/v4/sports/{sport}/odds/"
 # books Santhosh can actually bet, plus the low-vig references
@@ -129,7 +130,18 @@ def market_for(h):
 
 
 def prices_for(h, key):
-    """[(book_label, american_odds)] for the row's side, best first."""
+    """[(book_label, american_odds)] for the row's side, best first.
+
+    The Odds API supplies every book in one call; Novig and ProphetX are then
+    re-quoted straight from the exchanges when prophetx.py / novig.py have
+    credentials (DIRECT_EXCHANGES=0 turns that off). A direct quote replaces
+    the aggregator's for the same label — it is seconds old and reflects the
+    resting liquidity rather than a polled snapshot.
+    """
+    return _overlay_direct(h, _odds_api_prices(h, key))
+
+
+def _odds_api_prices(h, key):
     leagues = SPORT_FOR.get(h["league"])
     if h["league"] == "SOCCER":
         sports = soccer_keys(h.get("slug"))
@@ -182,6 +194,51 @@ def prices_for(h, key):
     return []
 
 
+_DIRECT = None
+_direct_failed = set()
+
+
+def _direct_modules():
+    """Exchange clients, imported lazily so a missing file never breaks the board."""
+    global _DIRECT
+    if _DIRECT is None:
+        _DIRECT = []
+        if os.environ.get("DIRECT_EXCHANGES", "1") != "0":
+            for name in ("prophetx", "novig"):
+                try:
+                    _DIRECT.append(__import__(name))
+                except Exception as e:           # pragma: no cover
+                    print(f"books: {name} unavailable: {e}", file=sys.stderr)
+    return _DIRECT
+
+
+def _overlay_direct(h, rows):
+    """Replace/add NOVIG and PX quotes with live ones from the exchanges."""
+    rows = list(rows)
+    for mod in _direct_modules():
+        try:
+            direct = mod.prices_for(h)
+        except NotConfigured:
+            continue
+        except Exception as e:
+            # a 429 or an outage must be visible, but one exchange must never
+            # take the whole price table down. Report once per label per run.
+            if mod.LABEL not in _direct_failed:
+                _direct_failed.add(mod.LABEL)
+                print(f"books: {mod.LABEL} direct quote failed: {e}", file=sys.stderr)
+            continue
+        if not direct:
+            continue
+        lbl, px = direct[0][0], int(direct[0][1])
+        rows = [(l, p) for l, p in rows if l != lbl] + [(lbl, px)]
+    rows.sort(key=lambda t: -t[1])
+    return rows
+
+
+def direct_status():
+    return [m.status() for m in _direct_modules()]
+
+
 def quota():
     return _quota
 
@@ -190,3 +247,5 @@ if __name__ == "__main__":
     k = get_key()
     d = _curl(f"https://api.the-odds-api.com/v4/sports/?apiKey={k}")
     print(f"ok — {len(d or [])} sports, quota remaining {_quota['remaining']}")
+    for line in direct_status():
+        print(line)
