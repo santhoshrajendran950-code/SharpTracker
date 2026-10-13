@@ -31,6 +31,8 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
+import pace
+
 CONCURRENCY, RETRIES, BACKOFF, PAGE = 24, 5, 0.4, 50
 
 # leaderboard category -> gamma tag slugs that belong to it
@@ -85,6 +87,7 @@ VENUES = {
 
 def get(url, retries=RETRIES):
     for a in range(retries + 1):
+        pace.wait(url)      # shared data-api bucket, see pace.py
         p = subprocess.run(["curl", "-s", "--max-time", "30", "-w", "\n%{http_code}", url],
                            capture_output=True, text=True)
         body, _, code = p.stdout.rpartition("\n")
@@ -94,6 +97,8 @@ def get(url, retries=RETRIES):
                 return json.loads(body)
             except ValueError:
                 return None
+        if code == "429":
+            pace.penalize()
         if code == "429" and a < retries:
             time.sleep(BACKOFF * (2 ** a))
             continue
@@ -408,8 +413,13 @@ def main():
                 "chase": avg > 0 and (cur - avg) / avg >= CHASE,
             })
 
-    with ThreadPoolExecutor(CONCURRENCY) as ex:
-        list(ex.map(sweep, wallets))
+    import check as chk
+    rel = chk.sweep_lock("macro", wait=300)      # one data-api sweep at a time, any script
+    try:
+        with ThreadPoolExecutor(CONCURRENCY) as ex:
+            list(ex.map(sweep, wallets))
+    finally:
+        (rel or (lambda: None))()
 
     # hedges: one wallet, one event
     groups = defaultdict(list)

@@ -214,8 +214,16 @@ def sweep(now, horizon):
                 "play": label if side.lower() == "yes" else f"{side.upper()}: {label}",
             })
 
-    with ThreadPoolExecutor(macro.CONCURRENCY) as ex:
-        list(ex.map(one, pool))
+    import check as chk
+    # Same endpoint, same bucket as bigboard/check/windows: hold the sweep lock
+    # instead of the old pgrep wait, which let a board start mid-catalyst and
+    # cost it 20-30 wallets (2026-10-13).
+    rel = chk.sweep_lock("catalyst", wait=300)
+    try:
+        with ThreadPoolExecutor(macro.CONCURRENCY) as ex:
+            list(ex.map(one, pool))
+    finally:
+        (rel or (lambda: None))()
 
     groups = defaultdict(list)
     for h in raw:

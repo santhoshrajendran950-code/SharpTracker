@@ -17,6 +17,8 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
+import pace
+
 # CONCURRENCY was 6, tuned 2026-09-12 when the positions API was throttling
 # hard (70% of a 690-sweep came back 429). Re-benchmarked 2026-09-13: 50 wallets
 # at conc=32 completed in 0.7s with zero failures, so the limit had relaxed and
@@ -97,11 +99,12 @@ LIVE_LOOKBACK_H = 6     # with --live, also include games started this recently
 SNAP = "check-snapshot.json"
 ALERT_SNAP = "check-alert-snapshot.json"   # separate state: manual checks must
                                            # not consume an alert's "new" flag
-STATS = {"ok": 0, "fail": 0, "unreachable": 0}
+STATS = {"ok": 0, "fail": 0, "unreachable": 0, "throttled": 0}
 
 
 def get(url, retries=RETRIES):
     for a in range(retries + 1):
+        pace.wait(url)      # data-api: ~200-request bucket at ~17/s, see pace.py
         p = subprocess.run(["curl", "-s", "--max-time", "15", "-w", "\n%{http_code}", url],
                            capture_output=True, text=True)
         body, _, code = p.stdout.rpartition("\n")
@@ -111,6 +114,9 @@ def get(url, retries=RETRIES):
                 return json.loads(body)
             except ValueError:
                 return None
+        if code == "429":
+            STATS["throttled"] += 1
+            pace.penalize()
         if code == "429" and a < retries:
             time.sleep(BACKOFF * (2 ** a))
             continue
@@ -130,6 +136,14 @@ def get(url, retries=RETRIES):
         time.sleep(BACKOFF)
     STATS["fail"] += 1
     return None
+
+
+def fail_detail():
+    """'22 FAILED (21 throttled, 1 unreachable)' — which kind of failure a
+    partial sweep had, so the header says rate limit vs dead network."""
+    f, u = STATS["fail"], STATS["unreachable"]
+    return (f"{f} FAILED ({f - u} throttled, {u} unreachable; "
+            f"{STATS['throttled']} 429s)") if f else ""
 
 
 def get_all(base, page=100, max_pages=20):

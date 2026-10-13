@@ -324,7 +324,7 @@ def main():
 
     print(f"BIG BOARD · {now.astimezone():%a %-I:%M %p %Z} · {len(slate)} games · "
           f"{pool_n-bad}/{pool_n} wallets"
-          + (f" · !! {bad} FAILED, PARTIAL" if bad else ""))
+          + (f" · !! {chk.fail_detail()}, PARTIAL" if bad else ""))
     print(f"{len(good)} qualifying of {len(board)} live positions"
           + (f" · {logged} new to ledger" if logged else ""))
     bk = None

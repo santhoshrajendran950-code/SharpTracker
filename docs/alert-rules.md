@@ -216,3 +216,32 @@ $200/day, the pick's odds are the worst price accepted (+0.005), take if the
 book is inside that else rest as a maker until kickoff. Graded nightly from
 Novig's position history. This measures fill rate and realised price against
 the graded price; it changes no alert rule. See `docs/exchange-apis.md`.
+
+## Ops: data-api rate limit, measured (2026-10-13)
+
+Boards came back `!! 22 FAILED` / `!! 31 FAILED` on 2026-10-13. Probing
+`data-api.polymarket.com/positions` under the sweep lock:
+
+| test | result |
+|---|---|
+| 150 cold requests, 24 threads | 150 × 200 |
+| next 150, 24 threads | 49 × 200, 101 × 429 |
+| next 150, **8** threads | 150 × 429 |
+| 20 s idle, then 300 | 200 × 200, 100 × 429 |
+| fixed 10 / 15 / 20 / 30 req/s for 20 s | 10.1 / 15.3 / 16.9 / 16.8 ok/s sustained |
+
+So it is a per-client token bucket of ~200 requests refilling at ~17/s, not a
+concurrency limit. Our sweeps fired ~90 req/s and lived on five exponential
+retries (~12 s); that worked only while nothing else had drained the bucket.
+`catalyst.py` (300 wallets, no lock, every 15 min) finishing a minute before a
+board was the trigger for the 22/31 failures; a board taking the lock the
+instant `windows.py` released it cost 14 more.
+
+Fix (`production/pace.py`): process-wide bucket of 150 tokens at 15/s for
+data-api, 20-token opening burst, zeroed on any 429; `check.get` and
+`macro.get` call it before every attempt. `catalyst.py` and `macro.py` now hold
+`check.sweep_lock` like the other sweepers. Header shows the breakdown:
+`N FAILED (x throttled, y unreachable; z 429s)`. Verified: 1,090/1,090 wallets,
+73 s alone; 1,090/1,090 starting the second a picks board finished. If a new
+competition or pool makes the sweep too slow, raise `RATE` only after re-running
+the fixed-rate probe — 17/s was the ceiling on 2026-10-13.
