@@ -211,12 +211,7 @@ def main():
             if mins < floor or mins / 60 > horizon:
                 continue
             slug = e["slug"]
-            if tag == "tennis":
-                lg = ("WTA" if slug.startswith("wta-")
-                      else "ATP" if slug.startswith("atp-") else "TENNIS")
-            else:
-                lg = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA",
-                      "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER"}.get(tag, tag.upper())
+            lg = chk.league_for(tag, slug)
             if want_leagues and lg not in want_leagues:
                 continue
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug, "start": st})

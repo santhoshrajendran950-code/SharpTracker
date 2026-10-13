@@ -68,11 +68,7 @@ def build_slate(now):
             if mins < 0 or mins / 60 > horizon:
                 continue
             slug = e["slug"]
-            if tag == "tennis":
-                lg = ("WTA" if slug.startswith("wta-")
-                      else "ATP" if slug.startswith("atp-") else "TENNIS")
-            else:
-                lg = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA"}.get(tag, tag.upper())
+            lg = chk.league_for(tag, slug)
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug,
                                     "start": st})
     return slate

@@ -58,7 +58,22 @@ MODEL_VERSION = "v4"
 LINEMOVE = True         # EXP-030 (2026-10-07): stamp every row with the line-move tier
                         # (linemove.py). "toward" rows go first in the email; "away"/"flat"
                         # (the bottom 60% by predicted move) are alerts only — picks.py gates.
-TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer"]   # wnba, nhl added 2026-09-30
+TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer",
+        "ucl", "uel"]   # wnba, nhl added 2026-09-30; ucl, uel 2026-10-13
+# The generic "soccer" tag holds thousands of events and get_all stops at 2000,
+# so midweek European cups fell past the cap and never reached the slate. The
+# competition tags are small and are fetched in addition; slugs dedupe.
+LEAGUE_FOR_TAG = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA",
+                  "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER"}
+
+
+def league_for(tag, slug):
+    """Board league label for a gamma tag + event slug. One copy, shared by
+    check/bigboard/windows so the three slates can never disagree."""
+    if tag == "tennis":
+        return ("WTA" if slug.startswith("wta-")
+                else "ATP" if slug.startswith("atp-") else "TENNIS")
+    return LEAGUE_FOR_TAG.get(tag, tag.upper())
 
 # STRICT bars (default). --loose restores the older, permissive set.
 # Tightened 2026-09-12: the old bars passed things like a $3,136 bet at -739
@@ -508,11 +523,7 @@ def main():
             if mins < floor or mins / 60 > horizon:
                 continue
             slug = e["slug"]
-            if tag == "tennis":
-                lg = ("WTA" if slug.startswith("wta-")
-                      else "ATP" if slug.startswith("atp-") else "TENNIS")
-            else:
-                lg = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA"}.get(tag, tag.upper())
+            lg = league_for(tag, slug)
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug, "start": st})
 
     if not slate:
