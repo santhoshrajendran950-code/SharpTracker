@@ -178,14 +178,18 @@ def main():
     # 7 tags/400 games down to 2 tags/~30, which is the whole runtime.
     TAG_FOR = {"nfl": "nfl", "ncaaf": "cfb", "cfb": "cfb", "mlb": "mlb",
                "nba": "nba", "wnba": "wnba", "nhl": "nhl", "ncaab": "cbb", "cbb": "cbb", "pga": "golf",
-               "golf": "golf", "atp": "tennis", "wta": "tennis", "tennis": "tennis"}
+               "golf": "golf", "atp": "tennis", "wta": "tennis", "tennis": "tennis",
+               # soccer is per-competition: the "soccer" tag caps at gamma's 2000-event
+               # offset and silently drops midweek UCL, so allow the competition tag
+               "ucl": "ucl", "uel": "uel", "soccer": "soccer"}
     picked = [a.lower() for a in argv if a.lower() in TAG_FOR]
     tags = sorted({TAG_FOR[a] for a in picked}) if picked else chk.TAGS
     want_leagues = None
     if picked:
         want_leagues = {"NCAAF" if a in ("cfb", "ncaaf") else
                         "NCAAB" if a in ("cbb", "ncaab") else
-                        "PGA" if a == "golf" else a.upper() for a in picked}
+                        "PGA" if a == "golf" else
+                        "SOCCER" if a in ("ucl", "uel", "soccer") else a.upper() for a in picked}
 
     now = datetime.now(timezone.utc)
     local_end = now.astimezone().replace(hour=23, minute=59, second=59)
@@ -211,7 +215,8 @@ def main():
                 lg = ("WTA" if slug.startswith("wta-")
                       else "ATP" if slug.startswith("atp-") else "TENNIS")
             else:
-                lg = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA"}.get(tag, tag.upper())
+                lg = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA",
+                      "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER"}.get(tag, tag.upper())
             if want_leagues and lg not in want_leagues:
                 continue
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug, "start": st})
