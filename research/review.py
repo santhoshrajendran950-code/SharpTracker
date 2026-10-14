@@ -7,7 +7,7 @@ score band, entry-price band, market type, league, hold band, wager band,
 consensus, trader override, trusted size step, sizing version, tier, week.
 Flat ROI (1u per pick at the recorded book price) with a game-clustered 90%
 bootstrap CI, sized ROI, CLV vs the Polymarket close and beat-close rate.
-Progress toward the KPI: CLV >= 0 over 200 graded v4/s5 picks.
+Progress toward the KPI: signal CLV (clv_entry) >= 0 over 200 graded v4 picks (s5+s6).
 
     python3 research/review.py                 # print
     python3 research/review.py --days 28       # window
@@ -178,19 +178,24 @@ def report(days=None):
     out.append("Flat ROI = 1u per pick at the recorded book price; CI resamples games. "
                "s-ROI = at published units. CLV in pts vs the Polymarket close.")
     out.append("")
-    # KPI
-    kpi = [(p, f) for p, f in prs if (p.get("sizing") or "") == "s5"]
-    clv = [p["clv"] for p, _ in kpi if p.get("clv") is not None]
-    out.append("## KPI — CLV >= 0 over 200 graded v4/s5 picks")
-    if clv:
-        m = sum(clv) / len(clv)
-        sd = (sum((c - m) ** 2 for c in clv) / max(1, len(clv) - 1)) ** 0.5
-        se = sd / len(clv) ** 0.5
-        out.append(f"- {len(kpi)} / {TARGET_PICKS} v4/s5 picks graded ({100*len(kpi)/TARGET_PICKS:.0f}%). "
-                   f"Mean CLV {m:+.2f} pts (±{1.645*se:.2f} at 90%), beat close {sum(1 for c in clv if c>0)}/{len(clv)}.")
-        out.append(f"- v4/s5 record: {line('v4/s5', kpi)}")
+    # KPI — 2026-10-14: v4 picks are s5 (to 10-07) and s6 (flat 1u, from 10-07);
+    # the KPI metric is the SIGNAL CLV (clv_entry: close vs the sharp's entry),
+    # per the 2026-10-07 window evaluation. Book CLV (clv) is shown beside it.
+    kpi = [(p, f) for p, f in prs if (p.get("sizing") or "") in ("s5", "s6")]
+    sclv = [p["clv_entry"] for p, _ in kpi if p.get("clv_entry") is not None]
+    bclv = [p["clv"] for p, _ in kpi if p.get("clv") is not None]
+    out.append("## KPI — signal CLV (clv_entry) >= 0 over 200 graded v4 picks (s5+s6)")
+    if sclv:
+        m = sum(sclv) / len(sclv)
+        sd = (sum((c - m) ** 2 for c in sclv) / max(1, len(sclv) - 1)) ** 0.5
+        se = sd / len(sclv) ** 0.5
+        bm = f"{sum(bclv)/len(bclv):+.2f}" if bclv else "—"
+        out.append(f"- {len(kpi)} / {TARGET_PICKS} v4 picks graded ({100*len(kpi)/TARGET_PICKS:.0f}%). "
+                   f"Signal CLV {m:+.2f} pts (±{1.645*se:.2f} at 90%), beat entry {sum(1 for c in sclv if c>0)}/{len(sclv)}; "
+                   f"book CLV {bm}.")
+        out.append(f"- v4 record: {line('v4 (s5+s6)', kpi)}")
     else:
-        out.append("- no v4/s5 picks with CLV yet.")
+        out.append(f"- {len(kpi)} / {TARGET_PICKS} v4 picks graded; none carries clv_entry yet.")
     out.append("")
     out.append("## Everything"); out.append(HEAD); out.append(line("ALL", prs)); out.append("")
     for title, fn in CUTS:

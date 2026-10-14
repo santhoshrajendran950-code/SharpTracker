@@ -134,7 +134,7 @@ window band = **zero**. Trader **CLV** persists (**+0.60**) but does not
 convert to ROI at T-60 (+0.06). Prior hold predicts CLV only.
 
 ### EXP-029 — CLV license: urgency and price discipline by trader CLV tier, instead of per-trader price windows
-- **Status:** proposed, pre-registered · **Rule:** replaces `price_min`/`price_max`; adds `clv_license.json` (rolling last-100 signal CLV, n ≥ 60, quartile tier)
+- **Status:** **rejected 2026-10-14** (weekly review; result below) · **Rule:** replaces `price_min`/`price_max`; adds `clv_license.json` (rolling last-100 signal CLV, n ≥ 60, quartile tier)
 - **Prior:** trader CLV half-to-half rank corr +0.60; top quartile +1.14 → +0.74 pts; bottom −1.10 → −0.90
 - **Test:** on the 99 research windows, grade top-tier traders' in-window positions at **min(T-60 price, sharp's entry + 1 pt)** — i.e. only when a follower could have got within 1 pt of the entry — vs the pool at T-60. Pass: top-tier ROI interval excludes the pool mean in ≥ 3 sports with n ≥ 40 each, and bottom-tier in-window picks ≤ pool. Fail: no separation → tiers become an informational flag on the board only.
 - **Decision rule for `price_max`:** retire regardless (section 1 of the review); it is the same kind of sample as `price_min`.
@@ -213,7 +213,8 @@ Research-window check (`~/nl-research/windows`, 7,234 qualifying settled rows):
 | stake / prior vol ≥ 2% | 291 | +2.6% | wide |
 | month P/L < 0 | 0 | — | untestable (pool = MONTH top-500) |
 
-### EXP-032 — INSTALLED 2026-10-14: thin / cold wallet gate
+### EXP-032 — thin / cold wallet gate
+- **Status:** **running** — installed 2026-10-14 on Santhosh's instruction; decision 2026-12-13 (60 days).
 - Rule: `passes()` refuses `thin` (prior P/L < $250k or prior vol < $2M) and
   `cold` (month hold < −3% on ≥ $1M). Per-user MONTH lookup for slate wallets
   lacking a month row (`check.annotate_record`).
@@ -223,3 +224,37 @@ Research-window check (`~/nl-research/windows`, 7,234 qualifying settled rows):
   `prior_pnl`, `prior_vol`, `month_hold` via the hit dict; after 60 days compare
   ROI and CLV of would-have-qualified thin/cold signals vs the qualifying set.
   Revert if the removed set is not worse on CLV.
+
+## Weekly review 2026-10-14 (see `docs/reviews/2026-10-14-weekly.md`)
+
+**State.** 6 picks settled since 10-07: 5-1, +44.3% [−10, +78], signal CLV
++1.44. All time 71 graded, 37-34, +5.9% [−20, +37]. **KPI: 57 / 200 v4 picks,
+signal CLV +0.50 ± 0.40 (90%), beat entry 36/57.** `review.py` KPI block fixed
+(s5+s6, `clv_entry`). No adopted rule contradicted at ≥ 40 games. Trader
+post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
+
+- **EXP-030:** 289 / 300 settled signals — bar not met; ETA 2026-10-16. Prelim
+  toward +25.0% [+7, +43] (65 games) · flat +5.9% [−14, +28] · away −16.7%
+  [−30, −1] (54 games), at entry + vig. `research/linemove_live.py`.
+- **EXP-028:** 13 live MLB picks (4-9, −45% [−86, −5]); one-more-month bar runs
+  to 2026-11-07 (season ends ~11-01). Not acted on.
+- **EXP-032:** running, n = 0 days / 60.
+- **EXP-029 — Result (pre-registered test, `research/clv_license.py`,
+  `results/exp029-clv-license-2026-10-14.md`).** 438,843 settled research rows;
+  276,674 licensed (≥ 60 prior signals, rolling last-100 signal CLV); quartile
+  cutoffs bottom ≤ −0.38, top ≥ +0.68. Pool = qualifying rows with T-60 price
+  in −122..−180: 1,231 rows / 968 games, −2.1% [−7, +2].
+
+  | tier | n / games | flat ROI [90%] | in-window signal CLV |
+  |---|---:|---|---:|
+  | top, follower within 1 pt of entry | 156 / 148 | +0.7% [−11, +12] | −0.37 |
+  | bottom | 120 / 115 | +6.6% [−6, +19] | — |
+  | unlicensed | 172 | +0.2% | — |
+
+  No sport reaches 40 top-tier games (NBA 39, MLB 23, esports 30); the top tier
+  does not separate from the pool overall, and the bottom tier is not worse.
+  Esports bottom tier +25.9% [+8, +43] is the only interval excluding zero — in
+  the wrong direction. **Decision: rejected.** A trader's rolling CLV persists
+  (10-07) but does not license their in-window positions; CLV tiers stay an
+  informational flag at most. `price_max` retirement stands on its own evidence.
+- **New hypotheses:** none beyond EXP-032 (filed 10-14 pre-review).
