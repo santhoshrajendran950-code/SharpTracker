@@ -155,3 +155,39 @@ in every quintile. Saved as `research/linemove_v5.json`.
 - **Prior:** research test, any price: top-40 −1.6% [−6, +2] vs bottom-60 −6.1% [−9, −3]; CLV +2.2 vs −0.9. Inside the window CLV separates, ROI does not (−3.0 vs −3.2) and flips by sport.
 - **Test (forward, live signals):** over the next 300 settled signals, "moving away" CLV < 0 and "moving toward" CLV > +1; pick-rule ROI of kept rows ≥ today's. Pass → the exclusion becomes a gate. Fail → informational only.
 - **Explicitly not proposed:** any new ROI-fitted score (third failure, third dataset).
+
+## Within-bettor sizing check 2026-10-13 (`research/sizing_within_bettor.py`, backtest window win3)
+
+Santhosh: "one of the bigger issues… is not unit sizing properly. Kch-Temp had
+Arsenal −1.5 for ~20k but Bills +3.5 for ~230k." Test: does a bettor's stake
+RELATIVE TO HIS OWN MEDIAN predict his result, within the seven sports wallets
+Polycopy lists (Kch-Temp, BreakTheBank, omnibus-076daa, joseph00677, 00gringo00,
+corkmaster420blaezit, UpTheBlues)? Fresh window Sep 15 → Oct 13 (28 d, 24,684
+settled events), positions rebuilt at T = kickoff − 60 m, graded flat 1u at the
+sharp's entry + 1.5 pt vig, game-clustered CIs. 34,708 scored positions.
+
+| Bettor | positions | <2x own median | ≥2x own median |
+|---|---|---|---|
+| UpTheBlues | 19,136 | −6.1% | −2.4% [−6, +1] |
+| omnibus-076daa | 4,708 | −6.1% | +0.4% [−5, +6] |
+| Kch-Temp | 32 | −31.9% (27) | +3.4% (5) [−69, +76] |
+| BreakTheBank | 9 | — | — |
+| joseph00677 / 00gringo00 / corkmaster | 3 / 0 / 2 | — | — |
+
+Pooled Spearman(log vs_typical, flat P/L) = +0.08. Only two wallets have depth;
+both show a weak tilt where oversized bets lose less, but the ≥2x bucket is
+breakeven-to-negative with CIs through zero, and the lift comes from dropping
+$10–$40 noise positions the scanner already excludes (MIN_STAKE). Inside the
+bets we would actually see (2–5x / 5–15x / 15x+) UpTheBlues is −1.3 / −3.3 /
+−3.6% and omnibus −0.4 / −1.9 / +5.0%: flat. omnibus's 15x+ bucket across three
+windows: −13.7%, +8%, +5% — sign-flipping, i.e. noise. Kch-Temp's five ≥2x bets
+are 5 bets. **Verdict: no evidence that scaling units to the bettor's relative
+stake fixes ROI; consistent with the 09-21 and 10-07 results.** Side finding:
+BreakTheBank's live signals have a 21-minute median lead and 13% are in-game,
+so a T-60 backtest barely sees him (9 positions in 28 days); joseph00677 and
+00gringo00 have 1 signal each all-time — they do not hold pre-kickoff positions
+at the moments we sweep.
+
+### EXP-031 — (not proposed) relative-stake unit ladder
+- **Status:** not proposed; recorded so the question is not re-asked without new data.
+- **What would change the answer:** a within-bettor ≥2x bucket with CI above zero on ≥200 bets for a bettor we can actually see pre-kickoff.
