@@ -245,3 +245,45 @@ data-api, 20-token opening burst, zeroed on any 429; `check.get` and
 73 s alone; 1,090/1,090 starting the second a picks board finished. If a new
 competition or pool makes the sweep too slow, raise `RATE` only after re-running
 the fixed-rate probe — 17/s was the ceiling on 2026-10-13.
+
+## Track-record depth + form gate (2026-10-14, Santhosh: "let's make that a rule moving forward")
+
+**Trigger.** raybanman (rank #131, 7.3% lifetime hold, $991k) put ~$2.0M on
+LASK Linz vs Liverpool — $845k on "Liverpool win: No" at 0.33, $557k LASK +1.5,
+$42k LASK to win — ten times his own median. Liverpool won. The wallet's first
+trade was 2026-09-09: 35 days old, 18 settled losses totalling −$3.0M, $5.6M
+redeemed on wins. Its "prior" P/L (lifetime minus last 30 days) was $1.6M on
+$990k of volume — a 159% hold that no trader sustains — and it was −4.6% on
+$12.6M in the 30 days before the match. Both lifetime bars (hold ≥ 1.5%, P/L ≥
+$250k) were cleared on one hot fortnight. The match was contested (BreakTheBank
+on Liverpool), so no pick was at risk, but the same shape would qualify
+unopposed tomorrow.
+
+**Rule (installed in `check.passes()`, shared by check / bigboard / windows /
+picks; `who.py` prints the bars).**
+- *thin*: prior P/L < $250k **or** prior volume < $2M → no play. The lifetime
+  bars must have been earned before the current 30-day window.
+- *cold*: month hold < −3% on ≥ $1M month volume → no play.
+- `check.annotate_record(hits)` computes both. The MONTH leaderboard slice only
+  ranks the top 500 by P/L, so a losing month is invisible in the pool; for every
+  wallet on the slate that clears the lifetime bars and has no month row, it does
+  one paced per-user MONTH lookup. Board flags: `thin`, `cold` (wide/--all) and
+  `THIN RECORD — … / COLD — …` in the block layout.
+
+**What it removes today (pool of 323 gate-passers, 86 with any month volume):**
+42 thin, 11 cold, 1 both. Active names removed: mooseborzoii ($62M volume, all
+in the last month), joseph00677 ($2.9M P/L, all this month), Kkunn, alwaysfade,
+monkeymashingkeyboard, VD721, Diabolical-Prize, totoro3miyazaki (thin);
+curie, Talvez10, ndb1 (−26.5%), Jsram, jtwyslljy, PowerSupplyUnit (−34%),
+bomber (cold). Unaffected: Kch-Temp, BreakTheBank, omnibus-076daa, UpTheBlues.
+
+**Evidence, honestly.** Research windows (101 windows, 7,234 qualifying settled
+positions, 199 wallets) show *no* forward-ROI difference by prior-hold band,
+prior volume, or stake/prior-volume concentration (prior hold > 30%: −1.4%
+[−14.8, +12.3] vs ≤ 30%: −2.6% [−5.0, +0.4]). The form half is untestable
+there: window pools are built from the MONTH top-500, so no qualifying row has a
+negative month. The depth half follows from the 2026-10-07 persistence study
+(a 30-day ROI does not predict the next 30), i.e. a wallet whose whole record is
+one month has not shown anything yet. This is a data-integrity gate, not a
+measured edge: EXP-032 tracks it in the picks ledger via the `thin`/`cold`
+flags on signals.

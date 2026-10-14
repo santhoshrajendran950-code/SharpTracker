@@ -250,7 +250,7 @@ def main():
                 "user": chk.short(tr.get("userName"), tr["proxyWallet"]),
                 "rank": int(tr["rank"]), "pnl": tr.get("pnl") or 0, "vol": vol,
                 "hold": (tr["pnl"] / vol * 100) if vol else 0.0,
-                "month_pnl": tr.get("month_pnl"),
+                "month_pnl": tr.get("month_pnl"), "month_vol": tr.get("month_vol"),
                 "slug": base, "league": slate[base]["league"], "game": slate[base]["title"],
                 "start": slate[base]["start"], "market": pz.get("title"),
                 "side": pz.get("outcome"), "stake": stake, "entry": avg, "now": cur,
@@ -289,6 +289,7 @@ def main():
             m["stack_dog"] = anyd if agree else m["dog"]
             m["hedged"] = not agree
             m["two_sided"] = m["market"] in book
+    chk.annotate_record(hits)             # thin / cold, 2026-10-14
     for h in hits:
         h["conv"] = chk.conviction(h)
     chk.mark_consensus(hits)
@@ -346,6 +347,10 @@ def main():
                 flags.append("entered at current price")
             if h.get("two_sided"):
                 flags.append("BOTH SIDES — hedger")
+            if h.get("thin"):
+                flags.append(f"THIN RECORD — {chk.m0(h['prior_pnl'])} on {chk.m0(h['prior_vol'])} before this month, no play")
+            if h.get("cold"):
+                flags.append(f"COLD — {h['month_hold']:+.1f}% on {chk.m0(h.get('month_vol') or 0)} this month, no play")
             elif h.get("hedged"):
                 flags.append("mixed sides, no stack credit")
             if (h.get("opposed") or 0) >= 1:
@@ -396,6 +401,10 @@ def main():
             flags.append("fresh")
         if h.get("two_sided"):
             flags.append("BOOK")
+        if h.get("thin"):
+            flags.append("thin")
+        if h.get("cold"):
+            flags.append("cold")
         elif h.get("hedged"):
             flags.append("mixed")
         if (h.get("opposed") or 0) >= 1:

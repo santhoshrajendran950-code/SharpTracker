@@ -85,6 +85,14 @@ def league_for(tag, slug):
 # tightened set excluded the highest-hold wallets via a lifetime-P/L floor that
 # rewarded churn rather than skill). --strict re-applies the tighter set.
 MIN_HOLD, MIN_PNL, MIN_STAKE = 1.5, 250_000, 2_500
+# Track-record depth + form, 2026-10-14 (raybanman / LASK). The lifetime bars
+# must have been earned BEFORE the last 30 days: a 35-day-old wallet with 18
+# settled positions cleared both on one hot fortnight, then bet $2M on one
+# match. And a wallet losing >3% on >$1M this month is not a read today,
+# whatever its lifetime says. Month rows for losing wallets are not in the
+# MONTH top-500, so annotate_record() looks them up per wallet.
+MIN_PRIOR_PNL, MIN_PRIOR_VOL = 250_000, 2_000_000
+FORM_MIN_VOL, FORM_MAX_LOSS = 1_000_000, -3.0
 MIN_ENTRY, MAX_ENTRY = 0.02, 0.90
 MIN_SCORE = 0.0
 
@@ -244,7 +252,7 @@ def build_pool():
                      f"&limit={PAGE}&offset={off}") or []:
             w = t.get("proxyWallet")
             if w:
-                month[w] = t.get("pnl") or 0
+                month[w] = t
 
     seen, pool = set(), []
     for off in range(0, POOL_SIZE, PAGE):
@@ -254,7 +262,8 @@ def build_pool():
             w = t.get("proxyWallet")
             if w and w not in seen:
                 seen.add(w)
-                t["month_pnl"] = month.get(w)
+                t["month_pnl"] = (month.get(w) or {}).get("pnl")
+                t["month_vol"] = (month.get(w) or {}).get("vol")
                 pool.append(t)
 
     # Month-slice wallets with no lifetime ranking — the discovery half. Their
@@ -269,7 +278,8 @@ def build_pool():
         with ThreadPoolExecutor(CONCURRENCY) as ex:
             for w, t in ex.map(lifetime, missing):
                 if t:
-                    t["month_pnl"] = month.get(w)
+                    t["month_pnl"] = (month.get(w) or {}).get("pnl")
+                    t["month_vol"] = (month.get(w) or {}).get("vol")
                     seen.add(w)
                     pool.append(t)
 
@@ -281,7 +291,8 @@ def build_pool():
         with open(os.path.join(HERE, "discovered.json")) as f:
             for w, t in json.load(f).items():
                 if w not in seen and isinstance(t, dict) and t.get("proxyWallet"):
-                    t.setdefault("month_pnl", month.get(w))
+                    t.setdefault("month_pnl", (month.get(w) or {}).get("pnl"))
+                    t.setdefault("month_vol", (month.get(w) or {}).get("vol"))
                     seen.add(w)
                     pool.append(t)
     except (FileNotFoundError, ValueError):
@@ -487,7 +498,43 @@ def passes(h, min_hold=MIN_HOLD, min_pnl=MIN_PNL, min_stake=MIN_STAKE,
     return (h["hold"] >= min_hold and h["pnl"] >= min_pnl
             and h["stake"] >= min_stake and not h["decided"]
             and not h.get("two_sided")          # hedger's book, not a read
+            and not h.get("thin")               # record rests on the last 30 days
+            and not h.get("cold")               # losing >3% on >$1M this month
             and lo <= h["entry"] <= hi and h["conv"] >= min_score)
+
+
+def annotate_record(hits):
+    """Depth and form of each wallet's record, 2026-10-14.
+
+    prior_* = lifetime minus the last 30 days. The MONTH leaderboard slice only
+    ranks the top 500 by P/L, so a wallet losing this month has no month row in
+    the pool; for every wallet that clears the lifetime bars and lacks one, look
+    its month row up directly (one paced call each, only wallets on the slate).
+    Sets thin (prior P/L or volume below MIN_PRIOR_*) and cold (month hold under
+    FORM_MAX_LOSS on at least FORM_MIN_VOL); passes() refuses both.
+    """
+    need = {h["wallet"] for h in hits
+            if h.get("month_vol") is None and h["hold"] >= MIN_HOLD and h["pnl"] >= MIN_PNL}
+    found = {}
+
+    def month_row(w):
+        rows = get("https://data-api.polymarket.com/v1/leaderboard"
+                   f"?category=SPORTS&timePeriod=MONTH&limit=1&user={w}")
+        r = rows[0] if isinstance(rows, list) and rows else {}
+        return w, (r.get("pnl") or 0.0, r.get("vol") or 0.0)
+
+    if need:
+        with ThreadPoolExecutor(CONCURRENCY) as ex:
+            found = dict(ex.map(month_row, need))
+    for h in hits:
+        if h["wallet"] in found:
+            h["month_pnl"], h["month_vol"] = found[h["wallet"]]
+        mp, mv = h.get("month_pnl") or 0.0, h.get("month_vol") or 0.0
+        h["prior_pnl"] = h["pnl"] - mp
+        h["prior_vol"] = h["vol"] - mv
+        h["month_hold"] = (mp / mv * 100) if mv else None
+        h["thin"] = h["prior_pnl"] < MIN_PRIOR_PNL or h["prior_vol"] < MIN_PRIOR_VOL
+        h["cold"] = mv >= FORM_MIN_VOL and h["month_hold"] < FORM_MAX_LOSS
 
 
 def main():
@@ -575,7 +622,7 @@ def main():
                 "wallet": tr["proxyWallet"], "user": short(tr.get("userName"), tr["proxyWallet"]),
                 "rank": int(tr["rank"]), "pnl": tr.get("pnl") or 0, "vol": vol,
                 "hold": (tr["pnl"] / vol * 100) if vol else 0.0,
-                "month_pnl": tr.get("month_pnl"),
+                "month_pnl": tr.get("month_pnl"), "month_vol": tr.get("month_vol"),
                 "slug": base, "league": slate[base]["league"], "game": slate[base]["title"],
                 "start": slate[base]["start"], "market": p.get("title"), "side": p.get("outcome"),
                 "stake": stake, "entry": avg, "now": cur,
@@ -603,6 +650,7 @@ def main():
             m["stack_dog"] = anyd if agree else m["dog"]
             m["hedged"] = not agree
             m["two_sided"] = m["market"] in book
+    annotate_record(hits)                 # thin / cold, 2026-10-14
     for h in hits:
         h["conv"] = conviction(h)
     mark_consensus(hits)

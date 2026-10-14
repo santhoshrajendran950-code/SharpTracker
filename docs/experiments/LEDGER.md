@@ -191,3 +191,35 @@ at the moments we sweep.
 ### EXP-031 — (not proposed) relative-stake unit ladder
 - **Status:** not proposed; recorded so the question is not re-asked without new data.
 - **What would change the answer:** a within-bettor ≥2x bucket with CI above zero on ≥200 bets for a bettor we can actually see pre-kickoff.
+
+## Track-record depth + form gate 2026-10-14 (raybanman / LASK Linz post-mortem)
+
+See `docs/alert-rules.md` § "Track-record depth + form gate". raybanman: wallet
+age 35 days, 18 settled losses (−$3.0M), prior hold 159% on $990k, month −4.6%
+on $12.6M, then $2.0M on LASK/anti-Liverpool, lost. Pool scan 2026-10-14: 323
+gate-passers → 42 thin, 11 cold, 1 both; active removals listed in alert-rules.
+
+Research-window check (`~/nl-research/windows`, 7,234 qualifying settled rows):
+
+| cut | rows | ROI | 95% CI |
+|---|---|---|---|
+| prior hold 1.5–3% | 1,011 | −1.4% | [−8.0, +4.9] |
+| prior hold 3–5% | 2,182 | −1.6% | [−5.7, +2.9] |
+| prior hold 5–10% | 2,256 | −1.5% | [−5.6, +2.9] |
+| prior hold 10–20% | 1,172 | −7.3% | [−13.7, −0.8] |
+| prior hold 20–50% | 524 | −3.4% | [−14.8, +7.5] |
+| prior hold > 30% (implausible) | 297 | −1.4% | [−14.8, +12.3] |
+| prior vol < $1M | 67 | −7.2% | [−28.0, +15.7] |
+| stake / prior vol ≥ 2% | 291 | +2.6% | wide |
+| month P/L < 0 | 0 | — | untestable (pool = MONTH top-500) |
+
+### EXP-032 — INSTALLED 2026-10-14: thin / cold wallet gate
+- Rule: `passes()` refuses `thin` (prior P/L < $250k or prior vol < $2M) and
+  `cold` (month hold < −3% on ≥ $1M). Per-user MONTH lookup for slate wallets
+  lacking a month row (`check.annotate_record`).
+- Basis: data integrity + 10-07 persistence result; no ROI backtest supports or
+  refutes it (see table). Installed on Santhosh's instruction.
+- Measure: signals.jsonl / picks.jsonl rows now carry `thin`, `cold`,
+  `prior_pnl`, `prior_vol`, `month_hold` via the hit dict; after 60 days compare
+  ROI and CLV of would-have-qualified thin/cold signals vs the qualifying set.
+  Revert if the removed set is not worse on CLV.

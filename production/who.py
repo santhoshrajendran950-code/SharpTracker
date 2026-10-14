@@ -150,12 +150,24 @@ def main():
             print("Caveat: the last 30 days is a thin slice of their volume — that "
                   "hold is noisy.")
 
+    fails = []
     bars = []
     if hold(allp) is not None and hold(allp) >= chk.MIN_HOLD:
         bars.append(f"hold >= {chk.MIN_HOLD}%")
     if allp["pnl"] >= chk.MIN_PNL:
         bars.append(f"P/L >= {chk.m0(chk.MIN_PNL)}")
-    print(f"\nClears {len(bars)}/2 quality bars" + (f" ({', '.join(bars)})" if bars else ""))
+    # depth + form bars, 2026-10-14 — same thresholds passes() applies via annotate_record()
+    if prior["pnl"] >= chk.MIN_PRIOR_PNL and prior["vol"] >= chk.MIN_PRIOR_VOL:
+        bars.append(f"prior P/L >= {chk.m0(chk.MIN_PRIOR_PNL)} on >= {chk.m0(chk.MIN_PRIOR_VOL)}")
+    else:
+        fails.append(f"THIN RECORD — {chk.m0(prior['pnl'])} on {chk.m0(prior['vol'])} before the last 30d")
+    if not (mon["vol"] >= chk.FORM_MIN_VOL and mh is not None and mh < chk.FORM_MAX_LOSS):
+        bars.append(f"not cold (month hold >= {chk.FORM_MAX_LOSS:+.0f}% or < {chk.m0(chk.FORM_MIN_VOL)} month vol)")
+    else:
+        fails.append(f"COLD — {mh:+.2f}% on {chk.m0(mon['vol'])} in the last 30d")
+    print(f"\nClears {len(bars)}/4 quality bars" + (f" ({', '.join(bars)})" if bars else ""))
+    for f_ in fails:
+        print(f"  !! {f_}")
 
     wait_lock()
     ps = chk.get(f"https://data-api.polymarket.com/positions?user={w}"

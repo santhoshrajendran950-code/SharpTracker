@@ -113,7 +113,7 @@ def _inline_sweep(slate):
                 "user": chk.short(tr.get("userName"), tr["proxyWallet"]),
                 "rank": int(tr["rank"]), "pnl": tr.get("pnl") or 0, "vol": vol,
                 "hold": (tr["pnl"] / vol * 100) if vol else 0.0,
-                "month_pnl": tr.get("month_pnl"),
+                "month_pnl": tr.get("month_pnl"), "month_vol": tr.get("month_vol"),
                 "slug": base, "league": slate[base]["league"],
                 "game": slate[base]["title"], "start": slate[base]["start"],
                 "market": p.get("title"), "side": p.get("outcome"),
@@ -142,6 +142,7 @@ def _inline_sweep(slate):
             m["stack_stake"] = tot if agree else m["stake"]
             m["stack_dog"] = anyd if agree else m["dog"]
             m["two_sided"] = book
+    chk.annotate_record(hits)             # thin / cold, 2026-10-14
     for h in hits:
         h["conv"] = chk.conviction(h)
     return hits, len(bad), len(pool)
