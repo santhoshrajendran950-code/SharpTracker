@@ -181,7 +181,11 @@ def main():
                "golf": "golf", "atp": "tennis", "wta": "tennis", "tennis": "tennis",
                # soccer is per-competition: the "soccer" tag caps at gamma's 2000-event
                # offset and silently drops midweek UCL, so allow the competition tag
-               "ucl": "ucl", "uel": "uel", "soccer": "soccer"}
+               "ucl": "ucl", "uel": "uel", "uecl": "uecl", "epl": "epl",
+               "laliga": "la-liga", "la-liga": "la-liga", "seriea": "serie-a",
+               "serie-a": "serie-a", "bundesliga": "bundesliga",
+               "ligue1": "ligue-1", "ligue-1": "ligue-1",
+               "ufc": "ufc", "mma": "ufc", "soccer": "soccer"}
     picked = [a.lower() for a in argv if a.lower() in TAG_FOR]
     tags = sorted({TAG_FOR[a] for a in picked}) if picked else chk.TAGS
     want_leagues = None
@@ -189,7 +193,10 @@ def main():
         want_leagues = {"NCAAF" if a in ("cfb", "ncaaf") else
                         "NCAAB" if a in ("cbb", "ncaab") else
                         "PGA" if a == "golf" else
-                        "SOCCER" if a in ("ucl", "uel", "soccer") else a.upper() for a in picked}
+                        "UFC" if a in ("ufc", "mma") else
+                        "SOCCER" if TAG_FOR[a] in chk.LEAGUE_FOR_TAG
+                        and chk.LEAGUE_FOR_TAG[TAG_FOR[a]] == "SOCCER"
+                        else a.upper() for a in picked}
 
     now = datetime.now(timezone.utc)
     local_end = now.astimezone().replace(hour=23, minute=59, second=59)

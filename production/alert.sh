@@ -26,7 +26,11 @@ fi
 
 PLAYS=/tmp/.sharp-plays.json
 rm -f "$PLAYS"
-OUT=$(/usr/bin/python3 check.py --alert "$THRESHOLD" --alert-json "$PLAYS" 2>&1)
+# --hours: a rolling window, not "what is left today". Until 2026-10-21 the
+# horizon was clamped to local midnight, so the 11pm run looked one hour ahead
+# and money going down tonight on tomorrow's slate reached no inbox.
+HOURS=${ALERT_HOURS:-36}
+OUT=$(/usr/bin/python3 check.py --alert "$THRESHOLD" --hours "$HOURS" --alert-json "$PLAYS" 2>&1)
 CODE=$?
 
 if [ $CODE -ne 0 ]; then

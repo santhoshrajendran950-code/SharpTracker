@@ -15,7 +15,7 @@ import functools, json, math, os, re, subprocess, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pace
 
@@ -61,12 +61,27 @@ LINEMOVE = True         # EXP-030 (2026-10-07): stamp every row with the line-mo
                         # (linemove.py). "toward" rows go first in the email; "away"/"flat"
                         # (the bottom 60% by predicted move) are alerts only — picks.py gates.
 TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer",
-        "ucl", "uel"]   # wnba, nhl added 2026-09-30; ucl, uel 2026-10-13
+        "ucl", "uel", "uecl", "epl", "la-liga", "serie-a", "bundesliga", "ligue-1",
+        "ufc"]
+# wnba, nhl added 2026-09-30; ucl, uel 2026-10-13; the rest 2026-10-21.
 # The generic "soccer" tag holds thousands of events and get_all stops at 2000,
 # so midweek European cups fell past the cap and never reached the slate. The
 # competition tags are small and are fetched in addition; slugs dedupe.
+# Measured 2026-10-21: of 63 UCL and 126 UEL games inside 48h, ZERO were also
+# reachable under "soccer" — the cap is not a near-miss, the cups are simply
+# absent. The five domestic leagues are added on the same reasoning: they are
+# well inside the cap midweek but compete with everything else for those 2,000
+# slots on a Saturday. MLS needs no tag of its own (all 11 of its games inside
+# 48h were present under "soccer").
+# Tag slugs verified against gamma before adding — "laliga", "seriea",
+# "ligue1", "ncaab" and "college-basketball" all return zero events; the live
+# spellings are the hyphenated ones below. "cbb" is correct but holds a single
+# event until the NCAAB season opens.
 LEAGUE_FOR_TAG = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA",
-                  "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER"}
+                  "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER",
+                  "uecl": "SOCCER", "epl": "SOCCER", "la-liga": "SOCCER",
+                  "serie-a": "SOCCER", "bundesliga": "SOCCER",
+                  "ligue-1": "SOCCER", "ufc": "UFC"}
 
 
 def league_for(tag, slug):
@@ -105,6 +120,8 @@ LEAD_MIN = 0            # include everything right up to kickoff
 LIVE_LOOKBACK_H = 6     # with --live, also include games started this recently
 
 SNAP = "check-snapshot.json"
+ALERTED_KEEP_D = 7      # days a sent play stays in the "already emailed" ledger
+HELD_SHOW = 10          # contested rows listed in full before the "+N more" tail
 ALERT_SNAP = "check-alert-snapshot.json"   # separate state: manual checks must
                                            # not consume an alert's "new" flag
 STATS = {"ok": 0, "fail": 0, "unreachable": 0, "throttled": 0}
@@ -562,12 +579,21 @@ def main():
         alert = float(sys.argv[sys.argv.index("--alert") + 1])
     snap_file = ALERT_SNAP if alert is not None else SNAP
     hours = 24.0
-    if "--hours" in sys.argv:
+    explicit_hours = "--hours" in sys.argv
+    if explicit_hours:
         hours = float(sys.argv[sys.argv.index("--hours") + 1])
 
     now = datetime.now(timezone.utc)
+    # Default view is "what is left today", which is what a manual check means.
+    # An explicit --hours is NOT clamped to midnight (2026-10-21): the clamp
+    # meant the 11pm run carried a one-hour horizon, so a sharp loading up
+    # tonight on tomorrow's NFL or Europa League slate was invisible until the
+    # clock rolled over. Horizon costs nothing at the rate-limited endpoint —
+    # get_all already pulls each tag's whole listing and the per-wallet position
+    # sweep does not grow with it — so the alert now runs a rolling window.
     local_end = now.astimezone().replace(hour=23, minute=59, second=59)
-    horizon = min(hours, max((local_end - now.astimezone()).total_seconds() / 3600, 1.0))
+    horizon = (hours if explicit_hours
+               else min(hours, max((local_end - now.astimezone()).total_seconds() / 3600, 1.0)))
 
     slate = {}
     for tag in TAGS:
@@ -666,19 +692,30 @@ def main():
     good.sort(key=lambda h: -h["conv"])
 
     # diff against the previous check so new money is visible at a glance
-    prev, prev_at = {}, None
+    prev, prev_at, alerted, noted, have_base = {}, None, {}, {}, False
     try:
         with open(snap_file) as f:
             d = json.load(f)
         prev_at = d.get("at")
         prev = {k: v for k, v in d.get("positions", {}).items()}
+        alerted = dict(d.get("alerted") or {})
+        noted = dict(d.get("noted") or {})
+        have_base = True
     except Exception:
         pass
     key = lambda h: f"{h['wallet']}|{h['slug']}|{h['market']}|{h['side']}"
     for h in hits:
         k = key(h)
-        if not prev:
-            h["delta"] = ""          # no baseline yet — nothing is "new"
+        if not have_base:
+            h["delta"] = ""          # no snapshot FILE yet — nothing is "new"
+            # 2026-10-21: this used to read `if not prev`, so a snapshot holding
+            # ZERO positions counted as "no baseline" and every row came back
+            # delta="" — not new, never emailed. Late-night runs produce exactly
+            # that: the horizon shrinks to the last hour of the day, no game is
+            # left, hits is empty, and save() writes positions:{}. The next
+            # morning's first run then silently swallowed the whole day's alerts
+            # (2026-10-21: six uncontested plays scoring 85/80/75/70/70/70 and
+            # not one email). An empty baseline is a real baseline.
         elif k not in prev:
             h["delta"] = "NEW"
         elif h["stake"] > prev[k] * 1.02:
@@ -724,20 +761,35 @@ def main():
         return 0
 
     if alert is not None:
-        new = [h for h in good if h["conv"] >= alert and h["delta"] == "NEW"]
+        # Alert on the first time a position QUALIFIES, not the first time it is
+        # seen. save() snapshots every hit over $1,000, so a wallet that opened
+        # at $1,400 (below the $2,500 bar, unalertable) and grew it to $33,290
+        # came back delta="+$31,890" rather than "NEW" and could never email
+        # again, however high it scored. `alerted` is the real question — have
+        # we told him about this play — and only rows actually sent are marked.
+        new = [h for h in good if h["conv"] >= alert and key(h) not in alerted]
         # 2026-10-07 (EXP-027): a side that another qualifying sharp is fading
         # is not a play — it is not emailed. Counted so the reader knows.
-        held = [h for h in new if (h.get("opposed") or 0) >= 1]
+        held = [h for h in good if h["conv"] >= alert
+                and (h.get("opposed") or 0) >= 1
+                and key(h) not in alerted and key(h) not in noted]
         fresh = [h for h in new if (h.get("opposed") or 0) < 1]
+        held.sort(key=lambda h: -h["conv"])
         _ord = {"toward": 0, "flat": 1, "away": 2}
         fresh.sort(key=lambda h: (_ord.get(h.get("move_tier"), 1), -h["conv"]))   # EXP-030: line moving toward first
-        if fresh:
-            print(f"{len(fresh)} new high-conviction play(s) "
-                  f"scoring {alert:.0f}+ · {now.astimezone():%a %-I:%M %p %Z}")
+        if fresh or held:
+            # 2026-10-21: this used to be `if fresh:`, so a run whose only
+            # qualifying rows were contested printed NOTHING and the wrapper
+            # emailed nothing — a 100-score play on 2026-10-20 21:28 went to
+            # no inbox and the log said "nothing new". EXP-027 still refuses to
+            # call a contested side a play; it is listed as context, not as one.
+            head = (f"{len(fresh)} new high-conviction play(s) " if fresh
+                    else "No new play — ")
+            print(head + f"scoring {alert:.0f}+ · {now.astimezone():%a %-I:%M %p %Z}")
             if bad:
                 print(f"(note: {len(bad)} wallet lookups failed — scan was partial)")
             if held:
-                print(f"({len(held)} more withheld — contested: a tracked sharp is on the other side)")
+                print(f"({len(held)} withheld — contested: a tracked sharp is on the other side)")
             print()
             for h in fresh:
                 mins = (h["start"] - now).total_seconds() / 60
@@ -763,6 +815,17 @@ def main():
                 if tags:
                     print(f"     >> {' | '.join(tags)}")
                 print()
+            if held:
+                print("WITHHELD — contested (a tracked sharp is fading this side; "
+                      "EXP-027 says that is not a play):")
+                for h in held[:HELD_SHOW]:
+                    mins = (h["start"] - now).total_seconds() / 60
+                    print(f"  [{h['conv']:.0f}] {m0(h['stake'])} {h['side'][:28]} {am(h['entry'])}"
+                          f" · {h['league']} {h['game'][:30]}"
+                          f" · {h['user'][:16]} · in {int(mins//60)}h{int(mins%60):02d}m")
+                if len(held) > HELD_SHOW:
+                    print(f"  (+{len(held) - HELD_SHOW} more)")
+                print()
             print("Informational only — what anonymous traders hold. Not advice.")
         if alert_json:
             # Structured copy of exactly what was printed, so a delivery layer
@@ -774,8 +837,20 @@ def main():
                                 for k, v in h.items()} for h in fresh], jf)
             except Exception as e:
                 print(f"(could not write {alert_json}: {e})", file=sys.stderr)
+        stamp = now.isoformat()
+        for h in fresh:
+            alerted[key(h)] = stamp
+        for h in held:
+            noted[key(h)] = stamp     # mentioned once as contested; if the
+                                      # opposition clears it is still unalerted
+                                      # and will email properly as a play
+        # keep the ledger from growing without bound: a play older than
+        # ALERTED_KEEP_D days is settled and can never alert again anyway.
+        cut = (now - timedelta(days=ALERTED_KEEP_D)).isoformat()
+        alerted = {k: v for k, v in alerted.items() if v >= cut}
+        noted = {k: v for k, v in noted.items() if v >= cut}
         log_signals(good, "alert", now)
-        save(hits, now, snap_file)
+        save(hits, now, snap_file, alerted, noted)
         return 0
 
     hdr = (f"CHECK · {now.astimezone():%a %-I:%M %p %Z} · {len(slate)} games left today · "
@@ -837,10 +912,25 @@ def main():
     return 0
 
 
-def save(hits, now, snap_file=SNAP):
+def save(hits, now, snap_file=SNAP, alerted=None, noted=None):
+    """Write the baseline. `alerted` is the ledger of plays already emailed; it
+    is preserved when a caller does not pass one, so the board and manual runs
+    can never wipe the alert's memory of what it has already sent."""
     try:
+        if alerted is None or noted is None:
+            try:
+                with open(snap_file) as f:
+                    d = json.load(f)
+            except Exception:
+                d = {}
+            if alerted is None:
+                alerted = d.get("alerted") or {}
+            if noted is None:
+                noted = d.get("noted") or {}
         with open(snap_file, "w") as f:
             json.dump({"at": now.isoformat(),
+                       "alerted": alerted,
+                       "noted": noted,
                        "positions": {f"{h['wallet']}|{h['slug']}|{h['market']}|{h['side']}": h["stake"]
                                      for h in hits}}, f)
     except Exception:

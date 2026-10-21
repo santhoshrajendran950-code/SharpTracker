@@ -287,3 +287,53 @@ negative month. The depth half follows from the 2026-10-07 persistence study
 one month has not shown anything yet. This is a data-integrity gate, not a
 measured edge: EXP-032 tracks it in the picks ledger via the `thin`/`cold`
 flags on signals.
+
+---
+
+## Email delivery: three silent suppressions (fixed 2026-10-21)
+
+The league list was never the problem — `TAGS` already covered every major
+sport. Three separate paths in `check.py --alert` were dropping the email
+outright. On 2026-10-21 six uncontested plays scoring 85/80/75/70/70/70 reached
+the alert pass and not one email was sent; `alert.log` said "nothing new >= 65"
+on every run.
+
+1. **An empty baseline counted as no baseline.** The delta test read
+   `if not prev:` and stamped every row `delta=""`. `save()` writes
+   `positions:{}` whenever nothing is on the slate, which is exactly what the
+   late-night runs produce — the horizon shrank to the last hour of the day, no
+   game was left, snapshot emptied. The next morning's first run then swallowed
+   the whole day. Now `have_base` (file loaded) is tracked apart from `prev`
+   (contents).
+2. **It alerted on first SIGHTING, not first QUALIFICATION.** `save()`
+   snapshots every position over $1,000 while the gate needs $2,500, so a
+   wallet that opened at $1,400 and grew to $33,290 came back
+   `delta="+$31,890"` and could never email again at any score. Replaced by an
+   `alerted` ledger in the snapshot — "have we told him about this play" —
+   marked only on rows actually sent, pruned after `ALERTED_KEEP_D` = 7 days.
+3. **Contested rows were withheld in silence.** EXP-027 is right that a side a
+   tracked sharp is fading is not a play, but the whole print block sat under
+   `if fresh:`, so a run whose only qualifying rows were contested printed and
+   emailed nothing — a 100-score play on 2026-10-20 21:28 reached no inbox. Now
+   sends on `fresh or held`, with contested rows in a compact `WITHHELD` block
+   (`HELD_SHOW` = 10) under their own `noted` ledger, so one that later becomes
+   uncontested still arrives as a real play. Volume: median 9/day, p90 27.
+
+**Horizon.** It was clamped to local midnight, so the 11pm run looked one hour
+ahead and money going down tonight on tomorrow's NFL or Europa League slate was
+invisible. An explicit `--hours` is no longer clamped; `alert.sh` passes
+`ALERT_HOURS`, default 36. This is nearly free: `get_all` already pulls each
+tag's whole listing and the rate-limited per-wallet position sweep does not grow
+with the horizon.
+
+**Tag coverage, measured not assumed.** Of 63 UCL and 126 UEL games inside 48h,
+**zero** were also reachable under the generic `soccer` tag — it caps at
+gamma's 2,000-event offset and the cups are simply absent, not near-missed.
+Added on the same reasoning: `uecl`, `epl`, `la-liga`, `serie-a`, `bundesliga`,
+`ligue-1`, `ufc`. MLS needs no tag of its own (all 11 of its 48h games were
+present under `soccer`). Verify a slug before adding it: `laliga`, `seriea`,
+`ligue1`, `ncaab` and `college-basketball` all return zero events. `cbb` is
+correct but holds one event until the NCAAB season opens.
+
+Verified in production at 11:15 EDT: 5 plays emailed, 2 listed as withheld, and
+a second run over the same state printed nothing — no duplicate sends.
