@@ -119,12 +119,59 @@ vs_typical (the trader's bet against their own median) no longer moves the
 size. Both windows found no dose-response in it and its 5-15x band was the
 worst bucket (-22% CI excluding zero). It is still computed and printed.
 
+S7, 2026-10-20 — SIZE FROM A SHRUNK EDGE ESTIMATE, NOT FROM THE SIZE MULTIPLE.
+Santhosh asked for "a statistical unit size ... mostly dependent on the bet
+relative to user wager history", as an algorithm run on every board and every
+send. Measured first, on 445,190 scored rows across 7 sports (relsize.py):
+
+  THE RELATIVE-STAKE FEATURE IS EMPTY. Spearman(log(stake / trailing median of
+  that wallet's OWN EARLIER stakes), flat unit P/L) = -0.0041 on 103,831 bets.
+  This is NOT the same denominator the three earlier rejections used -- those
+  tested `vs_typical`, the median of CONCURRENTLY OPEN positions, which is
+  pathological (2 open positions => always ~1.0x; 100 dust positions => 400x).
+  Rebuilt properly as an expanding median of prior bet stakes, no look-ahead.
+  It still carries nothing.
+
+  WHY, and this is the whole answer: win rate climbs monotonically with
+  relative size (50.4% at <0.5x -> 60.7% at 5-15x) but ROI does not, because
+  the win rate only tracks the PRICE the sharp paid. Mean entry rises 0.495 ->
+  0.605 across the same buckets, and win% minus implied probability is between
+  -0.36 and +0.86 points in EVERY bucket. A sharp betting 10x their normal size
+  is telling you they like a favourite, and the market has already priced it.
+  Sizing on the multiple just buys more of a fairly-priced favourite.
+
+So s7 does not size on the multiple. It sizes on the one quantity this project
+has shown to persist -- CLV -- shrunk toward zero by how little of it we have:
+
+    edge_hat (prob. pts) = realized signal CLV x n / (n + PRIOR_N)
+    f_kelly              = edge_hat / (1 - price)
+    units                = KELLY_FRAC x f_kelly / REF_F, clamped and snapped
+
+and while the sample is below PRIOR_N it holds an exploration floor of 1u, so
+s7 AT TODAY'S DATA IS BYTE-IDENTICAL TO s6. Signal CLV is +0.22 pts on n=70, so
+the shrinkage factor is 70/270 = 0.26, edge_hat = +0.06 pts, Kelly asks for
+~0.003u, and the floor pays 1u. Nothing about tonight's board changes.
+
+What it buys is that the thing is now a FUNCTION OF EVIDENCE instead of a
+constant: when signal CLV clears the 200-pick KPI bar the units rise on their
+own, and -- the part a flat rule cannot do -- if forward CLV comes in NEGATIVE
+the floor lifts at n >= PRIOR_N and sizing falls below 1u automatically. Set
+KELLY=False to replay s6, FLAT=False as well to replay s5.
+
 A unit is whatever the reader's unit is. UNIT_USD exists ONLY to convert this
-ledger's dollar stakes into units for reporting — it is never rendered. Nothing
+ledger's dollar stakes into units for reporting -- it is never rendered. Nothing
 published anywhere shows a dollar figure for Santhosh's own money.
 """
 UNIT_USD = 200.0         # $ per unit, for converting the ledger to units only
-SIZING_VERSION = "s6"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands; s6 FLAT
+SIZING_VERSION = "s7"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands; s6 FLAT; s7 shrunk-edge Kelly
+KELLY = True             # s7 (2026-10-20): size from shrunk signal CLV. False replays s6.
+PRIOR_N = 200            # shrinkage strength = the KPI's own bar (signal CLV >= 0 over 200 picks)
+KELLY_FRAC = 0.25        # quarter-Kelly. bt_sizing.py's full-Kelly bet only 26 of 3,309 rows
+REF_EDGE = 2.0           # prob. pts of edge that earns REF_UNITS at REF_PRICE -- the scale anchor
+REF_PRICE = 0.5          # anchor price. MUST be fixed, not the row's own price (see kelly_units)
+REF_UNITS = 1.0
+U_MIN, U_MAX = 0.25, 2.0 # 2u ceiling: the s5 80+ band was the most any window supported
+EXPLORE_UNITS = 1.0      # floor while n < PRIOR_N; this is what makes s7 == s6 today
 FLAT = True              # s6 (2026-10-07): 1u on every graded pick. Sized trailed flat live
                          # (-17% vs +2.4%), in all 7 OOS football months and the Sep rebuild
                          # (-27.3% vs -22.0%); the 90+ band took the biggest units and went
@@ -183,6 +230,179 @@ def _step(u, delta):
     return STEPS[max(0, min(len(STEPS) - 1, i + delta))]
 
 
+_CLV_CACHE = None
+
+
+def realized_clv(path=None):
+    """(mean signal CLV in probability points, n) from the graded pick ledger.
+
+    Signal CLV is `clv_entry` = close - the sharp's own entry (pickclv.py), the
+    KPI set on 2026-10-07. It is deliberately NOT `clv` (vs the book), because
+    that +1.6 pts is book spread we captured by line-shopping, not evidence that
+    the signal beat the market. Cached: the board calls recommend() once per row.
+    """
+    global _CLV_CACHE
+    if _CLV_CACHE is not None:
+        return _CLV_CACHE
+    import json, os
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "picks.jsonl")
+    vals = []
+    try:
+        with open(path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                v = r.get("clv_entry")
+                if v is not None:
+                    try:
+                        vals.append(float(v))
+                    except (TypeError, ValueError):
+                        pass
+    except OSError:
+        vals = []
+    n = len(vals)
+    _CLV_CACHE = ((sum(vals) / n) if n else 0.0, n)
+    return _CLV_CACHE
+
+
+def edge_estimate():
+    """Shrunk edge in probability points, plus the sample it rests on.
+
+    James-Stein style: an observed CLV of +0.22 pts on 70 picks is mostly noise,
+    so it is pulled toward zero by n/(n+PRIOR_N). PRIOR_N is the KPI's own bar,
+    which means "believe the measurement about as much as a 200-pick sample".
+    """
+    clv, n = realized_clv()
+    return clv * (n / float(n + PRIOR_N)), clv, n
+
+
+def kelly_units(price, edge_pts):
+    """Kelly units for `edge_pts` probability points at `price`.
+
+    Binary market at p, estimated true probability q = p + edge: the Kelly
+    fraction of bankroll is (q - p) / (1 - p) = edge / (1 - p).
+
+    The output is expressed in UNITS, not bankroll fraction, by anchoring:
+    1u is DEFINED as the KELLY_FRAC-Kelly stake for REF_EDGE points at
+    REF_PRICE. So
+
+        units = [edge / (1 - p)] / [REF_EDGE / (1 - REF_PRICE)]
+
+    and KELLY_FRAC cancels out of the ratio -- it fixes what a unit means in
+    bankroll terms, nothing more, which is why it does not appear below. The
+    anchor must be at REF_PRICE and not at the row's own price: anchoring at p
+    cancels the (1 - p) term and silently removes the Kelly behaviour. With it
+    anchored properly, a -200 favourite earns ~1.5x the units of a pick'em for
+    the same edge, because the payout is smaller.
+    """
+    if not price or not (0.0 < price < 1.0):
+        return 0.0
+    f = edge_pts / (1.0 - price)
+    f_ref = REF_EDGE / (1.0 - REF_PRICE)
+    if f_ref <= 0:
+        return 0.0
+    return (f / f_ref) * REF_UNITS
+
+
+S7_STEPS = [0.25, 0.5, 1.0, 1.5, 2.0]   # finer than STEPS: snapping s7 onto the
+                                        # s5 ladder [0.5,1,2,3,4] collapsed every
+                                        # edge between +1 and +3 pts into one rung.
+
+
+def _snap(u):
+    return min(S7_STEPS, key=lambda st: abs(st - u))
+
+
+def recommend_s7(h):
+    """(units, reason, flags) -- the s7 algorithm. See the S7 block above.
+
+    Relative stake does NOT enter the size; relsize.py measured it at
+    Spearman -0.0041 over 103,831 bets. It enters only through the dust/thin
+    guard below, which is the one thing it demonstrably does: a median built
+    from 2 open positions or $24 of dust cannot be trusted, so the row is
+    capped rather than believed.
+    """
+    conv = h.get("conv") or 0
+    notes = []
+    edge, clv_raw, n = edge_estimate()
+    price = h.get("entry") or 0.0
+
+    u_kelly = kelly_units(price, edge)
+    if n < PRIOR_N:
+        # Not enough forward CLV to size on yet. Hold the exploration stake --
+        # this is the branch that makes s7 identical to s6 today -- and say so.
+        u = EXPLORE_UNITS
+        why = (f"v4 {conv:.0f} · explore {EXPLORE_UNITS:g}u "
+               f"(signal CLV {clv_raw:+.2f} on n={n} < {PRIOR_N})")
+        notes.append("explore")
+    elif edge <= 0.0:
+        # The sample has cleared PRIOR_N and says the signal closes WORSE than
+        # where it was entered. There is no size that makes a negative-edge bet
+        # worth placing, so s7 recommends none. This is the branch s6 cannot
+        # express -- a flat rule keeps staking 1u through a negative CLV run --
+        # and it is why KELLY is worth installing while the units still match.
+        u = 0.0
+        why = (f"v4 {conv:.0f} · no play: signal CLV {clv_raw:+.2f} pts "
+               f"over n={n} (edge {edge:+.2f})")
+        notes.append("negative edge")
+        return u, why + " · " + ", ".join(notes), notes
+    else:
+        u = _snap(max(U_MIN, min(U_MAX, u_kelly)))
+        why = (f"v4 {conv:.0f} · {u:g}u from edge {edge:+.2f}pts "
+               f"(signal CLV {clv_raw:+.2f} on n={n}, Kelly at {price:.2f})")
+        notes.append("kelly")
+
+    notes.append("core" if conv >= CORE_CONV else "rest")
+    if not h.get("fresh"):
+        notes.append("stale")                 # reported, not sized (s6 behaviour kept)
+
+    # The dust/thin guard -- the ONLY place the size multiple is consulted.
+    #
+    # 2026-10-20, on Santhosh's "it should always be using the whole user
+    # history as comparison vs the current wager size": the denominator is now
+    # the wallet's CAREER median wager from wallethist.py, not the median of
+    # the positions it happens to hold at T. The old denominator is what made
+    # Soarin22 read 1.0x (2 open positions, compared to itself) and Feromont
+    # read 414x ($24 median of dust). vs_hist is stamped on every board row by
+    # wallethist.annotate(); when it is missing we fall back to the open-position
+    # figures rather than guessing, and a row with NO history is treated as
+    # untrusted, because an unknown baseline is not a safe one.
+    vh, hist_ok, hist_n = h.get("vs_hist"), h.get("hist_ok"), h.get("hist_n")
+    if vh is not None:
+        trusted_base = bool(hist_ok)
+        if not trusted_base:
+            notes.append(f"thin career (n={hist_n})")
+    else:
+        trusted_base = ((h.get("n_open") or 0) >= TRUST_POSITIONS
+                        and (h.get("typical") or 0) >= TRUST_TYPICAL)
+        if not trusted_base:
+            notes.append("thin baseline")
+        else:
+            notes.append("no career history")
+            trusted_base = False
+    if not trusted_base and u > CAP_UNTRUSTED:
+        u = CAP_UNTRUSTED
+
+    # A pick that publishes through a price_max override is a bet on a person,
+    # not a validated rule, so it risks half a unit until 40 games (EXP-022).
+    try:
+        import form
+        tr = form._trust(h.get("user"))
+        if tr and "price_max" in tr and (h.get("entry") or 0) > 0.643:
+            u = min(u, OVERRIDE_UNITS)
+            notes.append("override")
+    except Exception:
+        pass
+
+    return u, why + " · " + ", ".join(notes), notes
+
+
 def recommend(h):
     """(units, reason, flags).
 
@@ -193,6 +413,9 @@ def recommend(h):
     conv = h.get("conv") or 0
     if conv < MIN_CONV:
         return 0.0, f"score {conv:.0f} below {MIN_CONV:.0f}", ["below gate"]
+
+    if KELLY:
+        return recommend_s7(h)
 
     if FLAT:
         notes = ["core" if conv >= CORE_CONV else "rest"]

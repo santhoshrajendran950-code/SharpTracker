@@ -290,6 +290,15 @@ def main():
             m["hedged"] = not agree
             m["two_sided"] = m["market"] in book
     chk.annotate_record(hits)             # thin / cold, 2026-10-14
+    # Santhosh 2026-10-20: the size comparison is against the wallet's WHOLE
+    # wager history, not the positions it happens to hold now. Must run HERE,
+    # after the sweep has built `hits` -- placing it before the sweep lock
+    # annotated an empty list and every row printed "no-hist".
+    try:
+        import wallethist as _WH
+        _WH.annotate(hits)
+    except Exception as _e:
+        print(f"(wallethist unavailable: {_e})", file=sys.stderr)
     for h in hits:
         h["conv"] = chk.conviction(h)
     chk.mark_consensus(hits)
@@ -411,9 +420,16 @@ def main():
             flags.append(f"CONTESTED:{h['opposed']}")
         if (h.get("consensus") or 1) >= 2:
             flags.append(f"{h['consensus']}sharps")
-        vt = h.get("vs_typical")
-        vs = (f"{vt:.1f}x (med {chk.m0(h['typical'])}, n={h['n_open']})"
-              if vt else "—")
+        vh, vt = h.get("vs_hist"), h.get("vs_typical")
+        if vh:
+            # career median, the denominator he asked for. "!" marks a history
+            # too short or too small to be a trustworthy denominator.
+            vs = (f"{vh:.1f}x career (med {chk.m0(h['hist_median'])}, "
+                  f"n={h['hist_n']}{'' if h.get('hist_ok') else '!'})")
+        elif vt:
+            vs = f"{vt:.1f}x open (med {chk.m0(h['typical'])}, n={h['n_open']}) no-hist"
+        else:
+            vs = "—"
         mp = h.get("month_pnl")
         mtxt = chk.m0(mp) if mp is not None else "—"
         print(f"{base}|{h['user']}|{h['hold']:.1f}%|{mtxt}|{chk.m0(h['pnl'])}|{vs}"

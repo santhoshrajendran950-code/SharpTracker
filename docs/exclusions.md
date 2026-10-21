@@ -18,6 +18,7 @@ secret, personal, or the proprietary edge itself.
 | `backtest-v1` data (`bt_*.json`, `*.jsonl`) | Same reasons; 237 MB. |
 | Logs, `*.bak-*` (now parked in `~/.nightly-line/_backups/`), `__pycache__` | Noise. |
 | `aliases.json`, `nhl_sharps.{json,md}`, `keep_list` raw data | Real usernames / wallet addresses. |
+| `wallethist.json` | Every tracked wallet's whole wager history, keyed on wallet address and carrying usernames — same footing as `signals.jsonl`. `production/wallethist.py` rebuilds it from the research windows with `--build`, so the code of record is complete without the data. The aggregate, wallet-free view is committed as `results/wallethist-summary.md`. |
 | `~/.nightly-line/.redact` | The redaction map itself (the strings below, `from\|to` per line). `tools/sync-from-live.sh` reads it and refuses to finish if any `from` survives in the tree. |
 
 ## Redactions inside committed files
