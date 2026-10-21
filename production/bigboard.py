@@ -309,6 +309,7 @@ def main():
     for h in hits:
         h["conv"] = chk.conviction(h)
     chk.mark_consensus(hits)
+    chk.mark_xgate(hits)        # EXP-034; needs wallethist.annotate above it
     if chk.LINEMOVE:
         import linemove
         for h in hits:

@@ -132,6 +132,20 @@ def qualifies(h):
         return False, "period market — cannot be settled"
     if contested(h):
         return False, f"contested — {h.get('opposed')} sharp(s) on the other side"
+    if chk.XGATE:
+        # EXP-034 (Santhosh, 2026-10-21): "2 sharps with >3% hold have a side
+        # with >2x their career median, with no opposing sharp." The veto half
+        # is contested() above; this is the consensus-plus-size half. It STACKS
+        # on MIN_CONV at his direction -- 94% of the rule's backtested plays
+        # were already conv>=70, and the stacked cut measured +11.29% flat
+        # (90% CI [-1.02, +23.71]) against +8.78% for the rule alone.
+        if "xg_sharps" not in h:
+            # fail closed, and say why: a board built without
+            # wallethist.annotate() cannot answer this question.
+            return False, "x-gate unstamped (wallethist annotation missing)"
+        if not h.get("xg_ok"):
+            return False, (f"x-gate: {h.get('xg_sharps', 0)} of {chk.XG_NEED} sharps "
+                           f">{chk.XG_HOLD:.0f}% hold and >{chk.XG_MULT:.0f}x career median")
     if LINEMOVE_GATE and not h.get("move_tier"):
         import linemove                      # a row that arrived unstamped is scored here, never waved through
         h["move_tier"], h["move"] = linemove.tier(h)

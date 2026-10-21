@@ -257,4 +257,42 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
   the wrong direction. **Decision: rejected.** A trader's rolling CLV persists
   (10-07) but does not license their in-window positions; CLV tiers stay an
   informational flag at most. `price_max` retirement stands on its own evidence.
+- **EXP-034 — X-send gate: two sized sharps, uncontested (SHIPPED LIVE 2026-10-21).**
+  Santhosh's rule: post a side when **>=2 sharps each with >3% hold hold more
+  than 2x their own career median on it, and no qualifying sharp opposes it.**
+  The veto half is EXP-027 unchanged; `check.mark_xgate` adds the consensus +
+  size half, and `picks.qualifies` **stacks** it on `MIN_CONV` 70 at his
+  direction. Graded at the sharp's own entry price (his stated assumption, and
+  the optimistic one — a live follower fills worse, which is what `clv_entry`
+  measures).
+
+  | cut | n / games | flat ROI [90%] | signal CLV |
+  |---|---:|---|---:|
+  | 1 sharp, no veto (baseline) | 6,208 / 3,941 | −2.50% [−4.5, −0.6] | +0.09 |
+  | 2 sharps + EXP-027 veto | 563 / 528 | −1.59% [−8.3, +5.6] | +0.22 |
+  | + hold >3% only | 449 / 423 | +1.81% [−6.1, +9.8] | +0.18 |
+  | + >2x career median only | 231 / 228 | +2.60% [−7.7, +12.5] | +0.24 |
+  | **the rule** | 171 / 168 | **+8.78% [−3.2, +21.2]** | +0.11 |
+  | **the rule, stacked on conv>=70 (shipped)** | 160 / 157 | **+11.29% [−1.0, +23.7]** | +0.06 |
+  | today's gate alone, conv>=70 | 5,389 / 3,070 | −2.82% [−5.2, −0.5] | +0.07 |
+
+  Robust: dropping the best month leaves +5.00%, dropping the single biggest
+  winner +6.40%, leave-one-month-out spans +5.00%..+11.65% without flipping
+  sign, 9 of 12 months positive (binomial p = 0.146), only 5 of 171 plays at
+  entry < 0.25.
+
+  **Against it, recorded before the forward test starts.** No interval excludes
+  zero. Signal CLV *falls* when the two bars are applied (+0.22 -> +0.11) and
+  splits +0.29 first half / −0.06 second half; ROI rising while CLV falls is the
+  signature of variance, and CLV is the quantity that persisted on 10-07
+  (+0.60) where ROI did not (−0.00). The 48-cell knob sweep produced **2** cells
+  clearing zero against **4.8 expected by chance**, and is non-monotone in the
+  middle (mult 3x below 2x at every hold level). An earlier version of this test
+  omitted the $250k prior-P/L bar and reported −5.67%; 76% of the "sharps" in it
+  were wallets with a median lifetime P/L of $82,410. That run is void.
+
+  **Cost:** 160 of 5,389 conv>=70 plays, a ~97% cut in X volume — roughly 13
+  posts a month. **Pre-registered:** judge on signal CLV over 150 posted picks;
+  flip `check.XGATE = False` to revert. Scripts `research/xrule.py`,
+  `research/knobs.py`.
 - **New hypotheses:** none beyond EXP-032 (filed 10-14 pre-review).

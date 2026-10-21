@@ -470,6 +470,54 @@ def mark_consensus(hits):
             if len(sides) > 1 else 0
     return hits
 
+XGATE   = True    # EXP-034 (Santhosh, 2026-10-21): the X-send gate below.
+XG_HOLD = 3.0     # a co-sharp must hold better than this, in percent
+XG_MULT = 2.0     # ...and be betting more than this x ITS OWN career median
+XG_NEED = 2       # ...and there must be this many of them on the side
+
+
+def mark_xgate(hits):
+    """Stamp `xg_sharps` / `xg_ok`: distinct qualifying sharps on this row's own
+    side who each clear XG_HOLD and sit above XG_MULT x their OWN career median.
+
+    EXP-034, Santhosh 2026-10-21. Grouping mirrors mark_consensus exactly (same
+    `_lean`, same distinct-wallet counting), so `xg_sharps` can never disagree
+    with `consensus` about what "a side" is. The EXP-027 veto is unchanged and
+    still applied separately by picks.contested() — measured on the research
+    corpus, keeping that stricter asymmetric veto beat making it symmetric
+    (+8.78% vs +1.08%), so this gate ADDS to it rather than replacing it.
+
+    Requires wallethist.annotate() to have run first: `hist_ok` is what makes
+    vs_hist trustworthy (>= 20 wagers, >= $250 median), and a wallet with no
+    stored history must count as unknown, never as 1.0x. Rows that were never
+    annotated come out xg_sharps=0, and picks.py fails them closed with a reason
+    that names the missing annotation rather than waving them through.
+
+    Backtest (445,190 rows, 171 plays / 168 games, graded at the sharp's own
+    entry price): +8.78% flat ROI, 90% CI [-3.17, +21.23], signal CLV +0.11,
+    against -2.50% for a single sharp with no veto. Robust to dropping the best
+    month (+5.00%) and the biggest winner (+6.40%), 9 of 12 months positive.
+    NOT significant, and signal CLV FALLS when the two bars are applied
+    (+0.22 -> +0.11), which is why docs/experiments/LEDGER.md carries it as a
+    forward test rather than a finding. Shipped live at Santhosh's direction.
+    """
+    lean = defaultdict(lambda: defaultdict(set))
+    for h in hits:
+        if "conv" not in h or not passes(h, min_score=0):
+            continue
+        if (h.get("hold") or -99) <= XG_HOLD:
+            continue
+        if not h.get("hist_ok") or (h.get("vs_hist") or 0) <= XG_MULT:
+            continue
+        grp, tok = _lean(h)
+        lean[(h["slug"], grp)][tok].add(h["wallet"])
+    for h in hits:
+        grp, tok = _lean(h)
+        n = len(lean.get((h["slug"], grp), {}).get(tok, ()))
+        h["xg_sharps"], h["xg_ok"] = n, n >= XG_NEED
+    return hits
+
+
 def conviction(h):
     """v4 — the bettor, not the bet. See MODEL_VERSION.
 
