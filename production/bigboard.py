@@ -420,12 +420,22 @@ def main():
             flags.append(f"CONTESTED:{h['opposed']}")
         if (h.get("consensus") or 1) >= 2:
             flags.append(f"{h['consensus']}sharps")
-        vh, vt = h.get("vs_hist"), h.get("vs_typical")
+        vh, vt, vm = h.get("vs_hist"), h.get("vs_typical"), h.get("vs_mean")
         if vh:
-            # career median, the denominator he asked for. "!" marks a history
-            # too short or too small to be a trustworthy denominator.
-            vs = (f"{vh:.1f}x career (med {chk.m0(h['hist_median'])}, "
-                  f"n={h['hist_n']}{'' if h.get('hist_ok') else '!'})")
+            # Career median AND mean -- Santhosh 2026-10-20: "compare to both
+            # median and average for experienced bettors". Stake distributions
+            # are right-skewed (store p50 skew 1.66x, p90 3.95x), so 3x the
+            # median can be 1.2x the mean and entirely routine; the mean is only
+            # quoted once there is enough history to make it stable. "!" marks a
+            # denominator too short or too small to trust.
+            mark = "" if h.get("hist_ok") else "!"
+            if vm and h.get("hist_experienced"):
+                vs = (f"{vh:.1f}x med / {vm:.1f}x avg "
+                      f"(${chk.m0(h['hist_median'])[1:]}/{chk.m0(h['hist_mean'])[1:]}, "
+                      f"n={h['hist_n']}{mark})")
+            else:
+                vs = (f"{vh:.1f}x career (med {chk.m0(h['hist_median'])}, "
+                      f"n={h['hist_n']}{mark})")
         elif vt:
             vs = f"{vt:.1f}x open (med {chk.m0(h['typical'])}, n={h['n_open']}) no-hist"
         else:

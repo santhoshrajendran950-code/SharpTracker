@@ -55,8 +55,20 @@ BPL = 16          # histogram buckets per log2 -- ~4.4% wide. At BPL=4 (~19%) th
                   # bettors), which is most of them. 16 puts the error under 3%.
 MIN_N = 20        # below this a median is not believable (was TRUST_POSITIONS=10
                   # on open positions; a career median deserves a higher bar)
+EXPERIENCED_N = 100  # Santhosh 2026-10-20: "compare to both median and average for
+                  # experienced bettors". 100 wagers is the 90th percentile of
+                  # history depth in the store (640 of 9,579 wallets) and the point
+                  # where a MEAN is stable enough to quote -- a mean over 20 bets is
+                  # one whale away from meaningless, which is why MIN_N alone is not
+                  # the bar for the average.
 MIN_MEDIAN = 250.0   # below this the median is real but trivially small
-VERSION = 1
+FLAT_SKEW = 1.25  # mean/median below this = a flat bettor, so median ~ mean and a
+                  # multiple of either means the same thing. Above it the two
+                  # disagree and BOTH must be exceeded before a bet is "unusual":
+                  # measured skew is p50 1.66x, p90 3.95x, p99 12.94x, and only 21%
+                  # of experienced wallets are near-flat.
+RECENT_KEEP = 50  # raw stakes kept per wallet for form-relative features
+VERSION = 2       # v2 adds slog/slog2/recent; v1 stores must be rebuilt
 
 
 def _bucket(stake):
@@ -99,7 +111,8 @@ def observe(store, wallet, stake, user=None, ts=None):
         return False
     w = store["wallets"].setdefault(
         wallet, {"n": 0, "total": 0.0, "max": 0.0, "min": None,
-                 "first_ts": None, "last_ts": None, "h": {}, "user": user})
+                 "first_ts": None, "last_ts": None, "h": {}, "user": user,
+                 "slog": 0.0, "slog2": 0.0, "recent": []})
     if user and not w.get("user"):
         w["user"] = user
     k = str(b)
@@ -108,6 +121,16 @@ def observe(store, wallet, stake, user=None, ts=None):
     w["total"] += float(stake)
     w["max"] = max(w["max"], float(stake))
     w["min"] = float(stake) if w["min"] is None else min(w["min"], float(stake))
+    # log moments, for the standardised "how far outside their own spread" feature
+    lg = math.log(float(stake))
+    w["slog"] = w.get("slog", 0.0) + lg
+    w["slog2"] = w.get("slog2", 0.0) + lg * lg
+    # a short tail of the most recent wagers, for form-relative features. Kept as
+    # raw stakes because RECENT is small; the histogram stays the career record.
+    rec = w.setdefault("recent", [])
+    rec.append(round(float(stake), 2))
+    if len(rec) > RECENT_KEEP:
+        del rec[:len(rec) - RECENT_KEEP]
     if ts:
         w["first_ts"] = ts if w["first_ts"] is None else min(w["first_ts"], ts)
         w["last_ts"] = ts if w["last_ts"] is None else max(w["last_ts"], ts)
@@ -129,6 +152,39 @@ def quantile(w, q=0.5):
             return lo * ((hi / lo) ** frac)
         seen += c
     return _bucket_hi(max(int(k) for k in w["h"]))
+
+
+def log_moments(w):
+    """(mu, sd) of log stake over the whole history, or (None, None)."""
+    n = w.get("n") or 0
+    if n < 2 or "slog" not in w:
+        return None, None
+    mu = w["slog"] / n
+    var = max(0.0, w["slog2"] / n - mu * mu)
+    return mu, math.sqrt(var)
+
+
+def cume_below(w, stake):
+    """Fraction of this wallet's career wagers strictly below `stake`.
+
+    Read off the histogram: whole buckets below the target count fully, and the
+    bucket containing it is apportioned log-linearly, the same assumption the
+    quantile reader makes in the other direction.
+    """
+    n = w.get("n") or 0
+    if n <= 0 or stake <= 0:
+        return None
+    b = _bucket(stake)
+    below = 0
+    for k, c in w["h"].items():
+        kk = int(k)
+        if kk < b:
+            below += c
+        elif kk == b:
+            lo, hi = _bucket_lo(kk), _bucket_hi(kk)
+            frac = math.log(stake / lo) / math.log(hi / lo) if hi > lo else 0.0
+            below += c * min(1.0, max(0.0, frac))
+    return below / float(n)
 
 
 def summary(w):
@@ -197,6 +253,42 @@ def rel(wallet, stake, store=None):
     return (float(stake) / med if stake else None), med, w["n"], ok
 
 
+def compare(key, stake, store=None):
+    """The whole-history comparison for one wager, against BOTH centres.
+
+    Returns a dict, or None when the wallet has no stored history:
+
+      vs_median  stake / career median     (robust; ~1% accurate from the histogram)
+      vs_mean    stake / career mean       (EXACT -- n and total are kept directly)
+      skew       mean / median             the bettor's own style, not this bet
+      flat       skew < FLAT_SKEW          a flat bettor: the two agree
+      unusual    the bet clears BOTH       the only honest reading of "big for them"
+      experienced n >= EXPERIENCED_N       is the mean worth quoting at all
+      trusted    n >= MIN_N and median >= MIN_MEDIAN
+
+    Why both. Stake distributions are right-skewed, so a bet at 3x the MEDIAN can
+    sit at 1.2x the MEAN and be entirely routine for someone who sizes unevenly.
+    Requiring both keeps a spread bettor's ordinary swing from reading as
+    conviction, and for the 21% who are genuinely flat the two agree anyway.
+    """
+    st = store if store is not None else _store()
+    w = find(key, st)
+    if not w or not w.get("n"):
+        return None
+    n = w["n"]
+    med = quantile(w, 0.5)
+    mean = (w["total"] / n) if n else None
+    if not med or not mean:
+        return None
+    vm, va = (float(stake) / med if stake else None), (float(stake) / mean if stake else None)
+    skew = mean / med
+    return {"vs_median": vm, "vs_mean": va, "median": med, "mean": mean,
+            "n": n, "skew": skew, "flat": skew < FLAT_SKEW,
+            "experienced": n >= EXPERIENCED_N,
+            "trusted": n >= MIN_N and med >= MIN_MEDIAN,
+            "unusual": bool(vm and va and vm >= 2.0 and va >= 2.0)}
+
+
 def annotate(hits, store=None):
     """Stamp every board row with its whole-history comparison, in place.
 
@@ -206,8 +298,18 @@ def annotate(hits, store=None):
     """
     st = store if store is not None else _store()
     for h in hits:
-        r, med, n, ok = rel(h.get("wallet") or h.get("user"), h.get("stake") or 0, st)
-        h["vs_hist"], h["hist_median"], h["hist_n"], h["hist_ok"] = r, med, n, ok
+        c = compare(h.get("wallet") or h.get("user"), h.get("stake") or 0, st)
+        if not c:
+            h["vs_hist"] = h["hist_median"] = h["hist_mean"] = None
+            h["vs_mean"] = h["hist_skew"] = None
+            h["hist_n"], h["hist_ok"] = 0, False
+            h["hist_experienced"] = h["hist_unusual"] = h["hist_flat"] = False
+            continue
+        h["vs_hist"], h["vs_mean"] = c["vs_median"], c["vs_mean"]
+        h["hist_median"], h["hist_mean"] = c["median"], c["mean"]
+        h["hist_n"], h["hist_ok"] = c["n"], c["trusted"]
+        h["hist_skew"], h["hist_flat"] = c["skew"], c["flat"]
+        h["hist_experienced"], h["hist_unusual"] = c["experienced"], c["unusual"]
     return hits
 
 

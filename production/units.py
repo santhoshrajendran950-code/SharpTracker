@@ -163,7 +163,7 @@ ledger's dollar stakes into units for reporting -- it is never rendered. Nothing
 published anywhere shows a dollar figure for Santhosh's own money.
 """
 UNIT_USD = 200.0         # $ per unit, for converting the ledger to units only
-SIZING_VERSION = "s7"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands; s6 FLAT; s7 shrunk-edge Kelly
+SIZING_VERSION = "s7b"    # s1 ladder; s2 +consensus; s3 his sheet; s4 tiers; s5 score bands; s6 FLAT; s7 shrunk-edge Kelly
 KELLY = True             # s7 (2026-10-20): size from shrunk signal CLV. False replays s6.
 PRIOR_N = 200            # shrinkage strength = the KPI's own bar (signal CLV >= 0 over 200 picks)
 KELLY_FRAC = 0.25        # quarter-Kelly. bt_sizing.py's full-Kelly bet only 26 of 3,309 rows
@@ -172,6 +172,18 @@ REF_PRICE = 0.5          # anchor price. MUST be fixed, not the row's own price 
 REF_UNITS = 1.0
 U_MIN, U_MAX = 0.25, 2.0 # 2u ceiling: the s5 80+ band was the most any window supported
 EXPLORE_UNITS = 1.0      # floor while n < PRIOR_N; this is what makes s7 == s6 today
+HIST_MULT = True         # s7b (2026-10-20): apply histsize.py's wager-vs-career-history
+                         # multiplier. Santhosh asked for "an exhaustive system capable to
+                         # size bets appropriately based on wager vs user history", so the
+                         # full feature vector is computed and fitted -- but the fit is
+                         # honest about itself: all ten features screened at Spearman in
+                         # [-0.014,+0.013], NOTHING survives on experienced wallets, and
+                         # the table fitted on train and applied to test moved ROI by
+                         # -0.006 pts, 90% CI [-0.024,+0.012]. Geometric-averaging ten
+                         # heavily shrunk bins leaves a multiplier range of 0.94-1.06, so
+                         # against the S7_STEPS grid this is INERT TODAY by construction.
+                         # It is wired so that `histsize.py --fit` makes it live the moment
+                         # a bin genuinely separates, rather than a ladder being invented.
 FLAT = True              # s6 (2026-10-07): 1u on every graded pick. Sized trailed flat live
                          # (-17% vs +2.4%), in all 7 OOS football months and the Sep rebuild
                          # (-27.3% vs -22.0%); the 90+ band took the biggest units and went
@@ -357,6 +369,19 @@ def recommend_s7(h):
         why = (f"v4 {conv:.0f} · {u:g}u from edge {edge:+.2f}pts "
                f"(signal CLV {clv_raw:+.2f} on n={n}, Kelly at {price:.2f})")
         notes.append("kelly")
+
+    # s7b -- the wager-vs-history multiplier. Applied to the Kelly/explore size
+    # BEFORE the caps, so a thin baseline still overrides it.
+    if HIST_MULT and u:
+        try:
+            import histsize
+            m, hwhy, _f = histsize.multiplier(h)
+            if abs(m - 1.0) >= 0.005:
+                u = _snap(max(U_MIN, min(U_MAX, u * m)))
+                notes.append("hist x%.2f" % m)
+                why += " · " + hwhy
+        except Exception:
+            pass
 
     notes.append("core" if conv >= CORE_CONV else "rest")
     if not h.get("fresh"):
