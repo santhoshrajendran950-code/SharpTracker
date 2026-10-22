@@ -9,6 +9,8 @@ echo "=== $(date '+%F %T %Z') results ===" >> "$LOG"
 /usr/bin/python3 picks.py --settle >> "$LOG" 2>&1
 # closing-line value on the picks just settled — the KPI (pickclv.py)
 /usr/bin/python3 pickclv.py >> "$LOG" 2>&1
+# EXP-035 shadow rules: graded beside the record, never posted
+/usr/bin/python3 shadow.py --settle --report >> "$LOG" 2>&1
 OUT=$(/usr/bin/python3 picks.py --report --day "$DAY" 2>>"$LOG")
 echo "$OUT" >> "$LOG"
 case "$OUT" in

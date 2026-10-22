@@ -10,12 +10,13 @@ secret, personal, or the proprietary edge itself.
 | `.odds-key`, X/Discord credentials | Never stored in files; resolved from env or Keychain. Nothing to commit. |
 | `orders.jsonl` | Novig orders actually sent (paper or real): personal money, same footing as `bets.jsonl`. |
 | `.novig-read.pem`, `.prophetx-session`, Keychain `prophetx/*`, `novig/key-id` | Exchange API keys (docs/exchange-apis.md). The PEM and token cache live under `~/.nightly-line`, never in the repo. |
-| `signals.jsonl`, `ledgers/`, `picks.jsonl`, `alerts-posted.jsonl` | Raw signal and pick ledgers carry real Polymarket usernames and wallet addresses. Per `anon.py`: "the wallet identities are the whole edge." |
+| `signals.jsonl`, `ledgers/`, `picks.jsonl`, `alerts-posted.jsonl`, `shadow.jsonl`, `shadow-seen.json` | Raw signal and pick ledgers carry real Polymarket usernames and wallet addresses. Per `anon.py`: "the wallet identities are the whole edge." |
 | `trusted.json`, `discovered.json` | Real usernames + the notes justifying each override; wallet addresses found by the daily sweep. |
 | `check-snapshot.json`, `*-snapshot.json` | Live position snapshots — wallets, sizes, entries. |
 | `lines/` | The hourly sportsbook line archive (Odds API output; large, and licensed data). |
 | Research raw data (`windows/**/*.jsonl`, `*.json` except `probe_results.json`) | ~480 MB of rebuilt positions, trades and per-wallet priors — all keyed on wallet addresses, and over GitHub's file limits. |
 | `backtest-v1` data (`bt_*.json`, `*.jsonl`) | Same reasons; 237 MB. |
+| `mail-failed.jsonl` | Failed sends with recipient addresses (`deploy/mailer.py`). |
 | Logs, `*.bak-*` (now parked in `~/.nightly-line/_backups/`), `__pycache__` | Noise. |
 | `aliases.json`, `nhl_sharps.{json,md}`, `keep_list` raw data | Real usernames / wallet addresses. |
 | `wallethist.json` | Every tracked wallet's whole wager history, keyed on wallet address and carrying usernames — same footing as `signals.jsonl`. `production/wallethist.py` rebuilds it from the research windows with `--build`, so the code of record is complete without the data. The aggregate, wallet-free view is committed as `results/wallethist-summary.md`. |

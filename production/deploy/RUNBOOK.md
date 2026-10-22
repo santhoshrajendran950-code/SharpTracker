@@ -6,9 +6,11 @@ only the private bet-log jobs (settle, dayledger, weeksheet, weekpost) and manua
 every scan was dead for 13 hours.
 
 What moves: picks · alert · catalyst · windows · morningscan · picksresults · discover
-· linearchive · xboard (18 waves → 1 timer) · xboardmlb.   (10 timers)
+· linearchive · xboard (18 waves → 1 timer) · xboardmlb · watchdog.   (11 timers)
 Discord is OFF (2026-10-01): public channel is X; private channel is email.
-What stays on the Mac: settle (Sun 23:59 weekly) · dayledger · weeksheet · weekpost (bets.jsonl + Drive).
+What stays on the Mac: settle (Sun 23:59 weekly) · dayledger · weeksheet · weekpost (bets.jsonl + Drive)
+· tail + place (Novig keys, private ledgers) · wallethist (builds from ~/nl-research; its output is
+pushed to the server nightly, step 9) · slateboard (Discord only, which is off).
 
 ----------------------------------------------------------------------------------
 ## 1. Box  (10 min)
@@ -18,9 +20,19 @@ Add your SSH key at creation. Then:
     ssh root@SERVER
     apt-get update && apt-get -y upgrade && reboot
 
-## 2. Email key  (5 min)
-resend.com → API key, verify a sending domain (or use onboarding@resend.dev to test).
-SMTP (any provider) works instead: MAIL_BACKEND=smtp.
+## 2. Email key + dead-man's switch  (15 min)
+resend.com → API key, verify a sending domain (add the SPF/DKIM records it shows), or use
+onboarding@resend.dev to test. SMTP (any provider) works instead: MAIL_BACKEND=smtp.
+Every job mails through deploy/mailer.py (via sendmail.sh), on the Mac too: there the settings
+come from Keychain items under service `nightly-line-mail`, e.g.
+    security add-generic-password -s nightly-line-mail -a RESEND_API_KEY -w
+    security add-generic-password -s nightly-line-mail -a MAIL_FROM -w 'Nightly Line <alerts@yourdomain.com>'
+Until those exist the Mac falls back to the old claude path and logs LEGACY.
+
+healthchecks.io → new check, cron schedule `*/15 9-23 * * *`, grace 20 min, your email as the
+alert. Its ping URL goes in HEALTHCHECK_URL (server env file) or, on the Mac,
+    security add-generic-password -s nightly-line-healthcheck -a url -w '<ping url>'
+The watchdog pings it every run; if the box dies, the pings stop and the service emails you.
 
 ## 3. Export the Mac's secrets — ON THE MAC, in Terminal, never through chat
 Each prints one value; paste each into the env file in step 4 over SSH.
@@ -41,7 +53,10 @@ Each prints one value; paste each into the env file in step 4 over SSH.
     scp ~/.nightly-line/.anon-salt ~/.nightly-line/aliases.json ~/.nightly-line/picks.jsonl \
         ~/.nightly-line/signals.jsonl ~/.nightly-line/alerts-posted.jsonl ~/.nightly-line/trusted.json \
         ~/.nightly-line/discovered.json ~/.nightly-line/check-snapshot.json \
-        ~/.nightly-line/check-alert-snapshot.json $SERVER:/opt/nightly-line/
+        ~/.nightly-line/check-alert-snapshot.json ~/.nightly-line/wallethist.json \
+        $SERVER:/opt/nightly-line/
+    # wallethist.json is REQUIRED: without it every row has no career median, the
+    # EXP-034 gate fails closed, and no pick ever qualifies.
     # bets.jsonl is excluded above on purpose. It never goes to the server.
 
 ## 5. Configure  (ON THE SERVER)
@@ -60,7 +75,9 @@ headless", install Google Chrome's .deb and set CHROME_BIN in the env file.
 ## 7. Verify — DRY_RUN day  (ON THE SERVER)
     sudo -u nightly bash -c 'set -a; . deploy/nightly-line.env; python3 oddskey.py'     # "key found", never printed
     sudo -u nightly bash -c 'set -a; . deploy/nightly-line.env; python3 xpost.py --check-media'
-    systemctl list-timers --no-pager | grep nightly-line        # 10 timers, all with a NEXT time
+    systemctl list-timers --no-pager | grep nightly-line        # 11 timers, all with a NEXT time
+    sudo -u nightly bash -c 'set -a; . deploy/nightly-line.env; echo test | python3 deploy/mailer.py "Nightly Line test"'   # "resend 200"
+    sudo systemctl start nightly-line-watchdog.service          # healthchecks.io shows a ping
     sudo systemctl start nightly-line-picks.service && tail -5 picks.log
         # expect: "... · board NNs" and, if a pick qualified, "!! X post FAILED: DRY_RUN (not sent)"
     sudo systemctl start nightly-line-alert.service && tail -3 alert.log
@@ -75,9 +92,10 @@ real one.
     for j in picks picksresults alert catalyst windows morningscan discover linearchive \
              xboardmlb xboard00 xboard01 xboard02 xboard03 xboard04 xboard05 \
              xboard06 xboard07 xboard08 xboard09 xboard10 xboard11 xboard12 xboard13 \
-             xboard14 xboard15 xboard16 xboard17; do
+             xboard14 xboard15 xboard16 xboard17 watchdog; do
       launchctl unload ~/Library/LaunchAgents/com.nightlyline.$j.plist; done
-    launchctl list | grep nightlyline          # should show only settle, dayledger, weeksheet, weekpost
+    launchctl list | grep nightlyline          # only the private jobs: settle, dayledger, weeksheet,
+                                               # weekpost, tail, place, placesettle, wallethist, slateboard
  b. ON THE MAC — push the final state:
     scp ~/.nightly-line/picks.jsonl ~/.nightly-line/signals.jsonl ~/.nightly-line/alerts-posted.jsonl \
         ~/.nightly-line/check-snapshot.json ~/.nightly-line/check-alert-snapshot.json root@SERVER:/opt/nightly-line/
@@ -87,9 +105,14 @@ real one.
     sudo systemctl start nightly-line-picks.service && tail -3 /opt/nightly-line/picks.log
 One publisher at a time. If both run, every pick posts twice.
 
-## 9. Keep the Mac's ledger in sync (optional, for `picks.py --record` here)
-    # Mac crontab or a launchd job, nightly 00:30:
-    rsync -a root@SERVER:/opt/nightly-line/picks.jsonl root@SERVER:/opt/nightly-line/signals.jsonl ~/.nightly-line/
+## 9. Nightly sync with the Mac
+    # Mac -> server, after the 04:30 wallethist build (launchd job, 04:45). Until the
+    # research corpus also lives on the server, this is the one Mac dependency left;
+    # if it lapses the server keeps working on the last copy, just a staler one.
+    rsync -a ~/.nightly-line/wallethist.json root@SERVER:/opt/nightly-line/
+    # server -> Mac (optional, for `picks.py --record` and review.py here), 00:30:
+    rsync -a root@SERVER:/opt/nightly-line/picks.jsonl root@SERVER:/opt/nightly-line/signals.jsonl \
+          root@SERVER:/opt/nightly-line/shadow.jsonl ~/.nightly-line/
 The server is authoritative from cutover on. Never rsync the other direction again.
 
 ## 10. Operate
@@ -97,8 +120,11 @@ The server is authoritative from cutover on. Never rsync the other direction aga
  * Failures: the `N/1080 wallets · !! N FAILED` header. Occasional 5–15 is API weather;
    sustained → widen timers (picks to */15) before touching CONCURRENCY in check.py.
  * Odds API: ~1,800 credits/day at this cadence — needs a paid tier.
- * Watchdog (recommended): deploy/legacy has none yet — a timer that emails if picks.log is
-   silent for 30 min during 09–24 is the next thing to add.
+ * Watchdog: nightly-line-watchdog.timer runs watchdog.sh every 15 min, 09–24: picks.log
+   silent > 30 min, the picks timer inactive, or a failed send in mail-failed.jsonl → one
+   email per 3 h, and the healthchecks ping (step 2) catches the box itself dying.
+ * Shadow rules (EXP-035): shadow.jsonl fills on every pick run; `python3 shadow.py` prints
+   them beside the live gate. Never posted.
  * Updating code: edit on the Mac, test, then `rsync` only *.py/*.sh (never the state files)
    and `sudo systemctl daemon-reload` if a unit changed.
  * Rollback: `systemctl disable --now 'nightly-line-*'` on the server, `launchctl load` the
