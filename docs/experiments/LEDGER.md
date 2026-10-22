@@ -296,3 +296,12 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
   flip `check.XGATE = False` to revert. Scripts `research/xrule.py`,
   `research/knobs.py`.
 - **New hypotheses:** none beyond EXP-032 (filed 10-14 pre-review).
+
+## Rule freeze candidates 2026-10-22 (Santhosh)
+
+### EXP-035 — v5 frozen-rule candidates
+- **Status:** proposed, script ready, **not yet run** (`research/rules_v5.py`, needs the host corpus).
+- **R1** consensus, no opposition: >=2 bettors with hold >2.5% and lifetime P/L >$100k each above 1x their career median on a side; no bettor clearing the same bars on the other side. Close to EXP-034 (live since 10-21) with lower bars and a symmetric veto. The EXP-034 test measured the symmetric veto *worse* than EXP-027's (+1.08% vs +8.78%), and a $100k P/L bar is what voided the first EXP-034 run, so the script also prints R1 with the EXP-027 veto and with the v4 gate required.
+- **R2** trail hold >5% and lifetime P/L >$250k, with sized and no-opposition variants.
+- **R3** league specialist and **R4** late size-up: proposed to Santhosh, not adopted.
+- **Pre-registered:** a candidate is frozen only if its later-35% (out-of-sample) slice has signal CLV >= 0 and flat ROI at or above the EXP-034 benchmark on >= 100 plays; ten rows are tested at once, so the best in-sample row is expected to look good by chance.

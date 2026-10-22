@@ -27,21 +27,37 @@ sys.path.insert(0, os.path.join(HERE, "lib"))
 import btlib as B
 import sport_config as SC
 
-GAMMA = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=true"
-         "&limit=100&offset={off}&start_date_min={lo}&start_date_max={hi}")
+# `start_date_*` is when the market OPENED, not kickoff, so an open-date sweep
+# padded by a few days misses every game listed earlier than that. Kickoff is
+# `startTime`, filtered by `start_time_*`; both are queried and unioned, as
+# hist_slate.py does. PAGE is 10 because the payload (every prop market an event
+# ever listed) is what times out, not the number of events.
+PAGE = 10
+GAMMA_KICK = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=true"
+              f"&limit={PAGE}&offset={{off}}"
+              "&start_time_min={lo}T00:00:00Z&start_time_max={hi}T00:00:00Z")
+GAMMA_OPEN = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=true"
+              f"&limit={PAGE}&offset={{off}}&start_date_min={{lo}}&start_date_max={{hi}}")
 
 
-def fetch(tag, lo, hi):
-    out, off, capped = [], 0, False
+def fetch(tmpl, tag, lo, hi, holes):
+    """Every page of one slice. A page that cannot be read, or the offset cap,
+    goes into `holes`: a dropped slice is indistinguishable from a quiet week."""
+    out, off = [], 0
     while True:
-        got = B.get(GAMMA.format(tag=tag, off=off, lo=lo, hi=hi)) or []
+        got = B.get(tmpl.format(tag=tag, off=off, lo=lo, hi=hi))
+        if got is None:
+            holes.append({"tag": tag, "lo": lo, "hi": hi, "offset": off, "why": "request failed"})
+            print(f"  !! {tag} {lo}..{hi} offset {off} FAILED — slice incomplete", flush=True)
+            return out
         out += got
-        if len(got) < 100:
-            return out, capped
-        off += 100
+        if len(got) < PAGE:
+            return out
+        off += PAGE
         if off >= 2000:
-            capped = True
-            return out, capped
+            holes.append({"tag": tag, "lo": lo, "hi": hi, "offset": off, "why": "offset cap"})
+            print(f"  !! {tag} {lo}..{hi} hit the offset cap — PARTIAL", flush=True)
+            return out
 
 
 def fetch_all_no_dates(tag):
@@ -91,19 +107,19 @@ def main():
     t0 = time.time()
     lo = datetime.fromisoformat(start).replace(tzinfo=timezone.utc)
     hi = datetime.fromisoformat(end).replace(tzinfo=timezone.utc)
-    evs, capped_any = {}, False
+    evs, holes = {}, []
     if tag in SC.NEEDS_FULL_FETCH:
         for e in fetch_all_no_dates(tag):
             evs[e["slug"]] = e
     else:
-        cur = lo - timedelta(days=3)
-        while cur < hi + timedelta(days=3):
-            nxt = cur + timedelta(days=5)
-            got, capped = fetch(tag, cur.strftime("%Y-%m-%d"), nxt.strftime("%Y-%m-%d"))
-            capped_any = capped_any or capped
-            for e in got:
-                evs[e["slug"]] = e
-            cur = nxt
+        for tmpl, step, pad in ((GAMMA_KICK, 2, 1), (GAMMA_OPEN, 5, 3)):
+            cur = lo - timedelta(days=pad)
+            while cur < hi + timedelta(days=pad):
+                nxt = cur + timedelta(days=step)
+                for e in fetch(tmpl, tag, cur.strftime("%Y-%m-%d"), nxt.strftime("%Y-%m-%d"), holes):
+                    evs[e["slug"]] = e
+                cur = nxt
+    capped_any = bool(holes)
 
     games = []
     for slug, e in evs.items():
@@ -137,7 +153,7 @@ def main():
     games.sort(key=lambda g: g["start"])
     settled = sum(1 for g in games for m in g["markets"] if m.get("closed"))
     json.dump({"built": datetime.now(timezone.utc).isoformat(), "start": start, "end": end, "tag": tag,
-               "league": league, "games": games, "capped": capped_any,
+               "league": league, "games": games, "capped": capped_any, "holes": holes,
                "requests": dict(B.STATS)}, open(os.path.join(out_dir, "slate.json"), "w"))
     print(f"{tag} {ym}: {len(games)} games · {sum(len(g['markets']) for g in games)} markets ({settled} closed) · "
           f"{'CAPPED — partial' if capped_any else 'complete'} · {B.STATS['ok']} ok / {B.STATS['fail']} failed · {time.time()-t0:.0f}s")

@@ -26,8 +26,16 @@ import btlib as B
 import check as chk
 import bigboard as BB
 
-GAMMA = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=false"
-         "&limit=100&offset={off}&start_date_min={lo}&start_date_max={hi}")
+# `start_date_*` is when the MARKET OPENED, not kickoff (an NFL game opens weeks
+# early), so filtering on it alone misses every main game listed before the
+# window. Kickoff is `startTime`, filtered by `start_time_*`. Both are queried and
+# unioned, as research/hist_slate.py does. PAGE is 10 because a game event carries
+# every prop market it ever listed and the payload is what times out.
+PAGE = 10
+GAMMA_KICK = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=false"
+              f"&limit={PAGE}&offset={{off}}&start_time_min={{lo}}&start_time_max={{hi}}")
+GAMMA_OPEN = ("https://gamma-api.polymarket.com/events?tag_slug={tag}&closed=false"
+              f"&limit={PAGE}&offset={{off}}&start_date_min={{lo}}&start_date_max={{hi}}")
 HOLD = "https://data-api.polymarket.com/holders?market={cid}&limit=500"
 LB = ("https://data-api.polymarket.com/v1/leaderboard?category=SPORTS"
       "&timePeriod=ALL&limit=1&user={w}")
@@ -44,14 +52,22 @@ def plist(x):
     return x or []
 
 
-def events(tag, lo, hi):
+def events(tmpl, tag, lo, hi, holes):
+    """Every page of one query. A page that cannot be read goes into `holes`
+    instead of ending the loop quietly: a dropped page looks like a quiet slate."""
     out, off = [], 0
     while True:
-        got = B.get(GAMMA.format(tag=tag, off=off, lo=lo, hi=hi)) or []
-        out += got
-        if len(got) < 100:
+        got = B.get(tmpl.format(tag=tag, off=off, lo=lo, hi=hi))
+        if got is None:
+            holes.append(f"{tag} offset {off}")
             return out
-        off += 100
+        out += got
+        if len(got) < PAGE:
+            return out
+        off += PAGE
+        if off >= 2000:
+            holes.append(f"{tag} offset cap")
+            return out
 
 
 MINOR = re.compile(r"^(M15|M25|W15|W35|W50|W75|W100|ITF|Challenger|UTR)\b", re.I)
@@ -102,10 +118,15 @@ def main():
     min_usd = float(a[a.index("--min") + 1]) if "--min" in a else 10_000
     tags = sorted({TAGS[x] for x in a if x in TAGS}) or ["mlb", "tennis", "nfl", "cfb"]
     now = datetime.now(timezone.utc)
+    klo = (now - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    khi = (now + timedelta(hours=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
     lo, hi = (now - timedelta(hours=6)).strftime("%Y-%m-%d"), (now + timedelta(hours=30)).strftime("%Y-%m-%d")
-    evs = []
+    evs, holes = [], []
     for t in tags:
-        evs += events(t, lo, hi)
+        evs += events(GAMMA_KICK, t, klo, khi, holes)
+        evs += events(GAMMA_OPEN, t, lo, hi, holes)
+    if holes:
+        print(f"  !! {len(holes)} gamma page(s) FAILED ({', '.join(holes)}) — slate may be partial", flush=True)
     # gamma's date filter returns the prop/inning SUB-events but not the main
     # game event (its startDate is set days earlier). Derive the main slug from
     # each sub-event and fetch it directly.
