@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly Line — watchdog: pick heartbeat, failed mail, dead-man's-switch ping
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nightly
+WorkingDirectory=/opt/nightly-line
+EnvironmentFile=/opt/nightly-line/deploy/nightly-line.env
+ExecStart=/opt/nightly-line/watchdog.sh
+TimeoutStartSec=300

@@ -315,6 +315,15 @@ def main():
         for h in hits:
             h["move_tier"], h["move"] = linemove.tier(h)     # EXP-030, same stamp as check.py
 
+    if json_out:
+        # EXP-035 shadow rules: scored on the full sweep, never published. The
+        # pick job's board is the one that runs every 10 minutes, so only it logs.
+        try:
+            import shadow
+            shadow.log(hits, now)
+        except Exception as _e:
+            print(f"(shadow rules skipped: {_e})", file=sys.stderr)
+
     bad, pool_n = len(badl), len(pool)
 
     # chk.passes is the single gate — this used to be a second hand-rolled copy
