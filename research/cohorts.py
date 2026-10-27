@@ -60,6 +60,8 @@ ANCHORS = ("Kch-Temp", "primm")
 DAYS = ("Sun", "Sat", "Mon", "Thu", "rest")
 MIN_CLV_HIST = 30
 OOS_FRAC = 0.35
+TIMED = True        # False when every row's t_ts is the T-60 snapshot (research corpus)
+TIMED_ONLY = ("C10", "C11", "C12")
 
 
 # --- per-row features (expanding, no look-ahead) ----------------------------
@@ -256,13 +258,15 @@ def cohorts(mkts, sharp):
             # C09: value: follower gets the sharp's price or better
             if nw >= 2 and clean and lead["now"] <= lead["entry"]:
                 C["C09"].append(p)
+            if not TIMED:
+                pass
             # C10: independent arrivals (first and last sharp >= 6h apart) vs C11 herd (<= 1h)
-            if nw >= 2 and clean and ts[-1] - ts[0] >= 6 * 3600:
+            elif nw >= 2 and clean and ts[-1] - ts[0] >= 6 * 3600:
                 C["C10"].append(p)
-            if nw >= 2 and clean and ts[-1] - ts[0] <= 3600:
+            if TIMED and nw >= 2 and clean and ts[-1] - ts[0] <= 3600:
                 C["C11"].append(p)
             # C12: late money: 2+ sharps, at least one entering in the last 3h
-            if nw >= 2 and clean and any(0 < (r.get("kickoff_ts") or 0) - (r.get("t_ts") or 0) <= 3 * 3600 for r in on):
+            if TIMED and nw >= 2 and clean and any(0 < (r.get("kickoff_ts") or 0) - (r.get("t_ts") or 0) <= 3 * 3600 for r in on):
                 C["C12"].append(p)
             # C13: league specialists: 2+ sharps each >= 30 prior league wagers at > 0 ROI
             spec = [r for r in on if (r.get("_lg_n") or 0) >= 30 and (r.get("_lg_roi") or -1) > 0]
@@ -361,7 +365,11 @@ HEAD = ("| cut | plays | W-L | follow ROI | 90% CI | entry ROI | CLV pts | beat 
 
 # --- main --------------------------------------------------------------------
 def main():
+    global TIMED
     rows = add_history(X.add_career(X.load()))
+    # bt_rebuild.py stamps every research position t_ts = kickoff - 60m, so
+    # there is no per-wallet entry time and the arrival cohorts cannot be cut
+    TIMED = len({(r.get("kickoff_ts") or 0) - (r.get("t_ts") or 0) for r in rows}) > 1
     mk = markets(rows)
     L = []
     P = L.append
@@ -405,7 +413,12 @@ def main():
         for code, ps in C.items():
             cells.append(("cohort", code, g, ps))
     for code in sorted(NAMES):
+        if not TIMED and code in TIMED_ONLY:
+            P(f"| {code} {NAMES[code]} | n/a: needs per-wallet entry times (live ledger only) | | | | | | | |")
+            continue
         P(row(f"{code} {NAMES[code]}", stats(cos[DEFAULT].get(code, []))))
+    P("\n*'<=1 insig' counts every other $2.5K+ wallet on any other side of the market; "
+      "'insig only' allows any number of them, as long as none clears the sharp bar.*")
 
     P("\n### Part 2 sweep — the same cohort across all "
       f"{len(grid)} bars (cells with >= 30 plays)\n")

@@ -316,3 +316,14 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
 - **Part 1:** 1..4+ sharps x {nothing / <=1 insignificant / insignificant only / significant opposed}. **Part 2:** C01–C15 (the asks as stated; the Kch-Temp/primm anchors; money ratio; prior-CLV roster; steam vs value price; independent vs herd arrivals; late money; league specialists; fading a bad-CLV wallet; a net conviction score), each swept over the grid and judged on the sweep median. **Part 3:** kickoff day, US Eastern, Sun/Sat/Mon/Thu/rest.
 - **Grading:** flat at the T-60 price + vig (what a follower gets) and, for reference only, at the sharp's entry. CLV = close − T-60 price.
 - **Pre-registered:** ~900 cells are measured, so ~5% of the large ones clear zero by luck (Part 4 prints the count against that). A cohort is a candidate only if its later-35% slice has CLV >= 0 and follow ROI at or above the EXP-034 benchmark on >= 100 plays, and its sweep median is above zero. A day-of-week edge must hold in the held-out slice too; it is not a reason to change the rule on its own.
+- **Result 2026-10-27 (host corpus, 445,190 rows, 49,743 pregame markets; report `~/nl-research/exp036-cohorts.md`):** **no cohort clears the bar.** Only 3 cells with >= 100 plays have a follow-ROI 90% interval above zero, against ~27 expected by chance, and all 3 are C08.
+  - **C08 (2+ sharps, the T-60 price already moved >= 2 pts their way):** +29.0% [+13, +46] on 95 plays. Held out: +47.4% on 32 plays, CLV +0.45. The sweep median is +5.2%, and 24 of 29 cells are positive. It is the only lead worth following, and it fails the bar on held-out n alone.
+  - **C04 (Kch-Temp/primm, no sig opposition):** +4.4% [−13, +22] on 113 plays, CLV +0.39, held out +3.3% on 19 plays.
+  - **C05 (Kch-Temp/primm plus one other sharp):** +9.1% on 37 plays.
+  - **C06 (money ratio):** the sweep median is +5.2%, but it fades to about 0 held out.
+  - **The asks as stated:** C01 (2+ vs <=1 insig) is −9.3% on 36 plays, and C02 (3+) has 3 plays. Almost every market has 2 or more other $2.5K wallets against the side.
+  - **Significant opposition** costs −8.4% at 2+ sharps and −9.5% at 3+, so the veto half of the idea is supported.
+  - **C14 (fading bad-CLV wallets):** −48.6% held out. Rejected.
+  - **Day of week:** no day separates from the baseline (−2.2% to −3.7%).
+  - **C10–C12 are not testable on this corpus,** because bt_rebuild stamps every row t_ts = kickoff − 60m. They need live-ledger entry times.
+- **Next:** shadow C08 and C04/C05 live, beside EXP-034, until the held-out n reaches 100.
