@@ -327,3 +327,9 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
   - **Day of week:** no day separates from the baseline (−2.2% to −3.7%).
   - **C10–C12 are not testable on this corpus,** because bt_rebuild stamps every row t_ts = kickoff − 60m. They need live-ledger entry times.
 - **Next:** shadow C08 and C04/C05 live, beside EXP-034, until the held-out n reaches 100.
+
+## Price window suspended 2026-10-27 (Santhosh)
+
+- **Change:** the −122..−180 pick price window (alert-rules §4) is switched off in production, `picks.PRICE_WINDOW = False`, on Santhosh's word ("remove the rule for now"). Entry and book-price gates, the `alertpost.py` long-dog skip and the X-card copy follow the flag; flipping it back restores the old rule exactly.
+- **Context:** neither EXP-034's backtest nor EXP-036 applied the window; live, EXP-034 was stacked on it. A what-if on the 2026-10-27 board changed nothing: the Kch-Temp Celtics ML (−525, v4 90) fails the EXP-034 X-gate (0 of 2 sharps), not the window.
+- **Against it, recorded now:** both build windows lost on underdogs (−20% / −17%) and the v4 score ordered ROI only inside the window. Picks published from 2026-10-27 on should be cut by price band in the weekly review before this is made permanent.
