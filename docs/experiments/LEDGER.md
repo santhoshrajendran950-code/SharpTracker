@@ -306,3 +306,30 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
 - **R3** league specialist and **R4** late size-up: proposed to Santhosh, not adopted.
 - **Live shadow (2026-10-22, Santhosh: "continue with assumptions"):** `production/shadow.py` logs R1, R2, R2-sized and R4 on every pick-job board, beside a `live` benchmark, into the private `shadow.jsonl`; graded nightly by run-picks-results.sh. Nothing is posted and EXP-034 stays the published rule. Assumptions: ">2 bettors" = 2 or more; "winnings" = all-time Polymarket sports P/L; R2 tested both any-size and >1x median. R3 is research-only (live rows carry no per-league graded history). R1's $100k wallets are only seen if they are in the ~1,080-wallet pool.
 - **Pre-registered:** a candidate is frozen only if its later-35% (out-of-sample) slice has signal CLV >= 0 and flat ROI at or above the EXP-034 benchmark on >= 100 plays; ten rows are tested at once, so the best in-sample row is expected to look good by chance.
+
+## Consensus vs opposition cohorts 2026-10-27 (Santhosh)
+
+### EXP-036 — fifteen cohorts x a 32-bar profile grid, split by kickoff day
+- **Status:** proposed, script ready, **not yet run** (`research/cohorts.py`, needs the host corpus).
+- **Ask:** "trail Kch-Temp and primm ... more conviction if multiple users are behind the same side with no opposing significant positions ... 3 sharps vs 1 insignificant, 2 vs 1 ... different hold, P/L thresholds ... look primarily at Sundays, Saturdays, Mondays, Thursdays, then the rest."
+- **Sharp** = prior hold > H, prior P/L > P, stake > M x own career median; grid H {0, 1.5, 3, 5}% x P {0, 50k, 100k, 250k} x M {1, 2}. **Significant** opposition = a sharp on another side of the same market; **insignificant** = any other $2.5K+ wallet there.
+- **Part 1:** 1..4+ sharps x {nothing / <=1 insignificant / insignificant only / significant opposed}. **Part 2:** C01–C15 (the asks as stated; the Kch-Temp/primm anchors; money ratio; prior-CLV roster; steam vs value price; independent vs herd arrivals; late money; league specialists; fading a bad-CLV wallet; a net conviction score), each swept over the grid and judged on the sweep median. **Part 3:** kickoff day, US Eastern, Sun/Sat/Mon/Thu/rest.
+- **Grading:** flat at the T-60 price + vig (what a follower gets) and, for reference only, at the sharp's entry. CLV = close − T-60 price.
+- **Pre-registered:** ~900 cells are measured, so ~5% of the large ones clear zero by luck (Part 4 prints the count against that). A cohort is a candidate only if its later-35% slice has CLV >= 0 and follow ROI at or above the EXP-034 benchmark on >= 100 plays, and its sweep median is above zero. A day-of-week edge must hold in the held-out slice too; it is not a reason to change the rule on its own.
+- **Result 2026-10-27 (host corpus, 445,190 rows, 49,743 pregame markets; report `~/nl-research/exp036-cohorts.md`):** **no cohort clears the bar.** Only 3 cells with >= 100 plays have a follow-ROI 90% interval above zero, against ~27 expected by chance, and all 3 are C08.
+  - **C08 (2+ sharps, the T-60 price already moved >= 2 pts their way):** +29.0% [+13, +46] on 95 plays. Held out: +47.4% on 32 plays, CLV +0.45. The sweep median is +5.2%, and 24 of 29 cells are positive. It is the only lead worth following, and it fails the bar on held-out n alone.
+  - **C04 (Kch-Temp/primm, no sig opposition):** +4.4% [−13, +22] on 113 plays, CLV +0.39, held out +3.3% on 19 plays.
+  - **C05 (Kch-Temp/primm plus one other sharp):** +9.1% on 37 plays.
+  - **C06 (money ratio):** the sweep median is +5.2%, but it fades to about 0 held out.
+  - **The asks as stated:** C01 (2+ vs <=1 insig) is −9.3% on 36 plays, and C02 (3+) has 3 plays. Almost every market has 2 or more other $2.5K wallets against the side.
+  - **Significant opposition** costs −8.4% at 2+ sharps and −9.5% at 3+, so the veto half of the idea is supported.
+  - **C14 (fading bad-CLV wallets):** −48.6% held out. Rejected.
+  - **Day of week:** no day separates from the baseline (−2.2% to −3.7%).
+  - **C10–C12 are not testable on this corpus,** because bt_rebuild stamps every row t_ts = kickoff − 60m. They need live-ledger entry times.
+- **Next:** shadow C08 and C04/C05 live, beside EXP-034, until the held-out n reaches 100.
+
+## Price window suspended 2026-10-27 (Santhosh)
+
+- **Change:** the −122..−180 pick price window (alert-rules §4) is switched off in production, `picks.PRICE_WINDOW = False`, on Santhosh's word ("remove the rule for now"). Entry and book-price gates, the `alertpost.py` long-dog skip and the X-card copy follow the flag; flipping it back restores the old rule exactly.
+- **Context:** neither EXP-034's backtest nor EXP-036 applied the window; live, EXP-034 was stacked on it. A what-if on the 2026-10-27 board changed nothing: the Kch-Temp Celtics ML (−525, v4 90) fails the EXP-034 X-gate (0 of 2 sharps), not the window.
+- **Against it, recorded now:** both build windows lost on underdogs (−20% / −17%) and the v4 score ordered ROI only inside the window. Picks published from 2026-10-27 on should be cut by price band in the weekly review before this is made permanent.
