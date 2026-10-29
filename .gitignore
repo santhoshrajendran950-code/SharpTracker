@@ -22,6 +22,7 @@ discovered.json
 .novig-*
 .prophetx-session
 novig-public/
+novigdepth/
 *.env
 !*.env.example
 
