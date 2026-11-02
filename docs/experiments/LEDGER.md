@@ -333,3 +333,11 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
 - **Change:** the −122..−180 pick price window (alert-rules §4) is switched off in production, `picks.PRICE_WINDOW = False`, on Santhosh's word ("remove the rule for now"). Entry and book-price gates, the `alertpost.py` long-dog skip and the X-card copy follow the flag; flipping it back restores the old rule exactly.
 - **Context:** neither EXP-034's backtest nor EXP-036 applied the window; live, EXP-034 was stacked on it. A what-if on the 2026-10-27 board changed nothing: the Kch-Temp Celtics ML (−525, v4 90) fails the EXP-034 X-gate (0 of 2 sharps), not the window.
 - **Against it, recorded now:** both build windows lost on underdogs (−20% / −17%) and the v4 score ordered ROI only inside the window. Picks published from 2026-10-27 on should be cut by price band in the weekly review before this is made permanent.
+
+## EXP-037 — NCAAB 2025-26 sharp profiles (Santhosh, 2026-11-02)
+
+- **Status:** running. Started 2026-11-02 (`research/run_ncaab_season.sh`, Nov 2025–Apr 2026).
+- **Why now:** the all-sports screen never had NCAAB. It logged zero games for all 12 months because `sport_config` queried `college-basketball`, which holds only futures. Every `cbb-*` game is tagged `ncaa-basketball`: gamma lists 6,570 events for Nov–Apr, 6,544 of them classified as games.
+- **Method:** the standard window pipeline, then `research/ncaab_sharps.py` and `ncaab_holdout.py`, same filters and grading as NBA (T−60 positions, stake >= $2,500, flat ROI with game-clustered 90% CIs).
+- **Pre-registered:** select wallets on Nov–Jan only, grade them on Feb–Apr. The cohort passes only if held-out flat ROI > 0 with avg CLV >= 0. NCAAB wallets go to Santhosh as candidates and change nothing live without his word.
+- **Open, not changed:** `check.py` TAGS and `settle.py` use `cbb`, which returned 0 open games on 2026-11-02 while `ncaa-basketball` listed that day's openers, so the live board does not see NCAAB. alert-rules §"cbb is correct" is wrong on this evidence.

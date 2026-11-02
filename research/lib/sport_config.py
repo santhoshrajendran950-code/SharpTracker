@@ -102,7 +102,9 @@ SPORTS = {
     "mlb":  ("MLB", _team_markets, {}),
     "nba":  ("NBA", _team_markets, {}),
     "nhl":  ("NHL", _team_markets, {}),
-    "college-basketball": ("NCAAB", _team_markets, {}),
+    # "college-basketball" holds only futures; every cbb-* game is tagged
+    # "ncaa-basketball" (checked against gamma 2026-11-02).
+    "ncaa-basketball": ("NCAAB", _team_markets, {}),
     "cricket": ("CRICKET", _team_markets, {}),
     "wnba":    ("WNBA", _team_markets, {}),
     "esports": ("ESPORTS", _team_markets, {}),
