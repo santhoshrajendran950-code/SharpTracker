@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
 import pace
+import dataapi
 
 # CONCURRENCY was 6, tuned 2026-09-12 when the positions API was throttling
 # hard (70% of a 690-sweep came back 429). Re-benchmarked 2026-09-13: 50 wallets
@@ -128,6 +129,8 @@ STATS = {"ok": 0, "fail": 0, "unreachable": 0, "throttled": 0}
 
 
 def get(url, retries=RETRIES):
+    if dataapi.is_v1(url):          # v1 retired 2026-11-02; see dataapi.py
+        return dataapi.fetch(url, get)
     for a in range(retries + 1):
         pace.wait(url)      # data-api: ~200-request bucket at ~17/s, see pace.py
         p = subprocess.run(["curl", "-s", "--max-time", "15", "-w", "\n%{http_code}", url],

@@ -25,6 +25,7 @@ tails.jsonl is PRIVATE (same footing as bets.jsonl): never synced, never sent.
 import json, os, subprocess, sys, time, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+import dataapi
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -34,6 +35,8 @@ UA = {"User-Agent": "Mozilla/5.0"}
 
 
 def get(url):
+    if dataapi.is_v1(url):          # v1 retired 2026-11-02; see dataapi.py
+        return dataapi.fetch(url, get)
     for i in range(3):
         try:
             return json.load(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=20))
