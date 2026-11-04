@@ -32,6 +32,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 import pace
+import dataapi
 
 CONCURRENCY, RETRIES, BACKOFF, PAGE = 24, 5, 0.4, 50
 
@@ -86,6 +87,8 @@ VENUES = {
 
 
 def get(url, retries=RETRIES):
+    if dataapi.is_v1(url):          # v1 retired 2026-11-02; see dataapi.py
+        return dataapi.fetch(url, get)
     for a in range(retries + 1):
         pace.wait(url)      # shared data-api bucket, see pace.py
         p = subprocess.run(["curl", "-s", "--max-time", "30", "-w", "\n%{http_code}", url],

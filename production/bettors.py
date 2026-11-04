@@ -18,6 +18,7 @@ import json, math, subprocess, sys, time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+import dataapi
 
 POOL_SIZE, PAGE, CONCURRENCY = 690, 50, 6
 RETRIES, BACKOFF = 5, 0.4
@@ -29,6 +30,8 @@ STATS = {"ok": 0, "fail": 0}
 
 
 def get(url, retries=RETRIES):
+    if dataapi.is_v1(url):          # v1 retired 2026-11-02; see dataapi.py
+        return dataapi.fetch(url, get)
     for a in range(retries + 1):
         p = subprocess.run(["curl", "-s", "--max-time", "30", "-w", "\n%{http_code}", url],
                            capture_output=True, text=True)

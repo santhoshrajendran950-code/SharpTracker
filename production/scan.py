@@ -18,6 +18,7 @@ import json, os, subprocess, sys, time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+import dataapi
 
 # ── tuning ───────────────────────────────────────────────────────────────────
 POOL_SIZE      = 690      # ~0.1% of Polymarket's ~688K monthly actives
@@ -53,6 +54,8 @@ STATS = {"ok": 0, "fail": 0, "unreachable": 0}
 
 def get(url, retries=RETRIES):
     """GET JSON via curl, retrying through the positions API's 429 throttle."""
+    if dataapi.is_v1(url):          # v1 retired 2026-11-02; see dataapi.py
+        return dataapi.fetch(url, get)
     for attempt in range(retries + 1):
         p = subprocess.run(
             ["curl", "-s", "--max-time", "30", "-w", "\n%{http_code}", url],
