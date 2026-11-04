@@ -108,6 +108,9 @@ PICK_MIN_ENTRY = 0.55    # Favourites only: -122 or shorter...
 PICK_MAX_FAV = -180      # ...but nothing shorter than -180. Inside this window the
 PICK_MAX_ENTRY = 0.643   # bettor-profile score orders ROI in both windows; outside
                          # it, it does not. Both the book price and the entry pass.
+PRICE_WINDOW = False     # Santhosh 2026-10-27: "remove the rule for now". False = no
+                         # price gate on entry or book price (form.py overrides moot);
+                         # True restores -122..-180 exactly as before.
 LINEMOVE_GATE = True     # EXP-030: picks only from the "toward" line-move tier. Forward test
                          # (300 live signals) is pre-registered in docs/experiments/LEDGER.md;
                          # flip to False to make the tier informational only.
@@ -159,9 +162,9 @@ def qualifies(h):
         lo, hi = form.price_window(h.get("user"), PICK_MIN_ENTRY, PICK_MAX_ENTRY)
     except Exception:
         lo, hi = PICK_MIN_ENTRY, PICK_MAX_ENTRY
-    if 0 < e < lo:
+    if PRICE_WINDOW and 0 < e < lo:
         return False, f"longer than {PICK_MAX_DOG} at entry"
-    if e > hi:
+    if PRICE_WINDOW and e > hi:
         return False, f"shorter than {PICK_MAX_FAV} at entry"
     u, _, _ = U.recommend(h)
     if not u:
@@ -222,12 +225,12 @@ def scan(board_path, key_odds=None):
             _lo, _hi = PICK_MIN_ENTRY, PICK_MAX_ENTRY
         book_dog_cap = -round(100 * (1 - _lo) / _lo) if _lo < .5 else round(100 * _lo / (1 - _lo))
         book_fav_cap = -round(100 * _hi / (1 - _hi)) if _hi >= .5 else round(100 * (1 - _hi) / _hi)
-        if best[1] > book_dog_cap:
+        if PRICE_WINDOW and best[1] > book_dog_cap:
             # the sharp's entry passed but the book price is a long dog —
             # +150 and longer lost money at every size on his sheet
             skipped[f"book price longer than {book_dog_cap}"] += 1
             continue
-        if best[1] < book_fav_cap:
+        if PRICE_WINDOW and best[1] < book_fav_cap:
             # mirrors book_dog_cap on the other side: a price_max override
             # (justaluckydude, CandleHammerDrums, 2026-09-24) widens how
             # short a favourite the BOOK price is allowed to be, same as it

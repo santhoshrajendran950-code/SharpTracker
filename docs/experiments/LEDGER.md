@@ -306,3 +306,55 @@ post-mortem (Cobalt Osprey) → EXP-032. Four picks unsettled, two stale.
 - **R3** league specialist and **R4** late size-up: proposed to Santhosh, not adopted.
 - **Live shadow (2026-10-22, Santhosh: "continue with assumptions"):** `production/shadow.py` logs R1, R2, R2-sized and R4 on every pick-job board, beside a `live` benchmark, into the private `shadow.jsonl`; graded nightly by run-picks-results.sh. Nothing is posted and EXP-034 stays the published rule. Assumptions: ">2 bettors" = 2 or more; "winnings" = all-time Polymarket sports P/L; R2 tested both any-size and >1x median. R3 is research-only (live rows carry no per-league graded history). R1's $100k wallets are only seen if they are in the ~1,080-wallet pool.
 - **Pre-registered:** a candidate is frozen only if its later-35% (out-of-sample) slice has signal CLV >= 0 and flat ROI at or above the EXP-034 benchmark on >= 100 plays; ten rows are tested at once, so the best in-sample row is expected to look good by chance.
+
+## Consensus vs opposition cohorts 2026-10-27 (Santhosh)
+
+### EXP-036 — fifteen cohorts x a 32-bar profile grid, split by kickoff day
+- **Status:** proposed, script ready, **not yet run** (`research/cohorts.py`, needs the host corpus).
+- **Ask:** "trail Kch-Temp and primm ... more conviction if multiple users are behind the same side with no opposing significant positions ... 3 sharps vs 1 insignificant, 2 vs 1 ... different hold, P/L thresholds ... look primarily at Sundays, Saturdays, Mondays, Thursdays, then the rest."
+- **Sharp** = prior hold > H, prior P/L > P, stake > M x own career median; grid H {0, 1.5, 3, 5}% x P {0, 50k, 100k, 250k} x M {1, 2}. **Significant** opposition = a sharp on another side of the same market; **insignificant** = any other $2.5K+ wallet there.
+- **Part 1:** 1..4+ sharps x {nothing / <=1 insignificant / insignificant only / significant opposed}. **Part 2:** C01–C15 (the asks as stated; the Kch-Temp/primm anchors; money ratio; prior-CLV roster; steam vs value price; independent vs herd arrivals; late money; league specialists; fading a bad-CLV wallet; a net conviction score), each swept over the grid and judged on the sweep median. **Part 3:** kickoff day, US Eastern, Sun/Sat/Mon/Thu/rest.
+- **Grading:** flat at the T-60 price + vig (what a follower gets) and, for reference only, at the sharp's entry. CLV = close − T-60 price.
+- **Pre-registered:** ~900 cells are measured, so ~5% of the large ones clear zero by luck (Part 4 prints the count against that). A cohort is a candidate only if its later-35% slice has CLV >= 0 and follow ROI at or above the EXP-034 benchmark on >= 100 plays, and its sweep median is above zero. A day-of-week edge must hold in the held-out slice too; it is not a reason to change the rule on its own.
+- **Result 2026-10-27 (host corpus, 445,190 rows, 49,743 pregame markets; report `~/nl-research/exp036-cohorts.md`):** **no cohort clears the bar.** Only 3 cells with >= 100 plays have a follow-ROI 90% interval above zero, against ~27 expected by chance, and all 3 are C08.
+  - **C08 (2+ sharps, the T-60 price already moved >= 2 pts their way):** +29.0% [+13, +46] on 95 plays. Held out: +47.4% on 32 plays, CLV +0.45. The sweep median is +5.2%, and 24 of 29 cells are positive. It is the only lead worth following, and it fails the bar on held-out n alone.
+  - **C04 (Kch-Temp/primm, no sig opposition):** +4.4% [−13, +22] on 113 plays, CLV +0.39, held out +3.3% on 19 plays.
+  - **C05 (Kch-Temp/primm plus one other sharp):** +9.1% on 37 plays.
+  - **C06 (money ratio):** the sweep median is +5.2%, but it fades to about 0 held out.
+  - **The asks as stated:** C01 (2+ vs <=1 insig) is −9.3% on 36 plays, and C02 (3+) has 3 plays. Almost every market has 2 or more other $2.5K wallets against the side.
+  - **Significant opposition** costs −8.4% at 2+ sharps and −9.5% at 3+, so the veto half of the idea is supported.
+  - **C14 (fading bad-CLV wallets):** −48.6% held out. Rejected.
+  - **Day of week:** no day separates from the baseline (−2.2% to −3.7%).
+  - **C10–C12 are not testable on this corpus,** because bt_rebuild stamps every row t_ts = kickoff − 60m. They need live-ledger entry times.
+- **Next:** shadow C08 and C04/C05 live, beside EXP-034, until the held-out n reaches 100.
+
+## Price window suspended 2026-10-27 (Santhosh)
+
+- **Change:** the −122..−180 pick price window (alert-rules §4) is switched off in production, `picks.PRICE_WINDOW = False`, on Santhosh's word ("remove the rule for now"). Entry and book-price gates, the `alertpost.py` long-dog skip and the X-card copy follow the flag; flipping it back restores the old rule exactly.
+- **Context:** neither EXP-034's backtest nor EXP-036 applied the window; live, EXP-034 was stacked on it. A what-if on the 2026-10-27 board changed nothing: the Kch-Temp Celtics ML (−525, v4 90) fails the EXP-034 X-gate (0 of 2 sharps), not the window.
+- **Against it, recorded now:** both build windows lost on underdogs (−20% / −17%) and the v4 score ordered ROI only inside the window. Picks published from 2026-10-27 on should be cut by price band in the weekly review before this is made permanent.
+
+## EXP-037 — NCAAB 2025-26 sharp profiles (Santhosh, 2026-11-02)
+
+- **Status:** running. Started 2026-11-02 (`research/run_ncaab_season.sh`, Nov 2025–Apr 2026).
+- **Why now:** the all-sports screen never had NCAAB. It logged zero games for all 12 months because `sport_config` queried `college-basketball`, which holds only futures. Every `cbb-*` game is tagged `ncaa-basketball`: gamma lists 6,570 events for Nov–Apr, 6,544 of them classified as games.
+- **Method:** the standard window pipeline, then `research/ncaab_sharps.py` and `ncaab_holdout.py`, same filters and grading as NBA (T−60 positions, stake >= $2,500, flat ROI with game-clustered 90% CIs).
+- **Pre-registered:** select wallets on Nov–Jan only, grade them on Feb–Apr. The cohort passes only if held-out flat ROI > 0 with avg CLV >= 0. NCAAB wallets go to Santhosh as candidates and change nothing live without his word.
+- **Open, not changed:** `check.py` TAGS and `settle.py` use `cbb`, which returned 0 open games on 2026-11-02 while `ncaa-basketball` listed that day's openers, so the live board does not see NCAAB. alert-rules §"cbb is correct" is wrong on this evidence.
+
+## EXP-038 — Midterm 2026 political follow list (Santhosh, 2026-11-04)
+
+- **Status:** proposed. Design agreed 2026-11-04; collector not built, no results seen.
+- **Hypothesis:** some wallets that forecast the 2026 general election better than the market before polls opened keep that edge in separate political markets, and their high-conviction positions are the more accurate ones.
+- **Output:** a private follow list for future political markets. It changes nothing live, including `macro.py`, without Santhosh's word. Wallet-level data stays under `~/nl-research/midterms/`; only wallet-free aggregates enter this repo (docs/exclusions.md).
+- **Data on 2026-11-04:** gamma tag `midterms` has 1,383 events, 13,736 markets, ~$500M volume, ~$379M of it in markets closed at a final price. The tag also holds primaries and older markets. Data API v1 answers 410, so `research/lib/check.py` cannot be reused; the collector calls v2 directly with cursor paging. The T-60 corpus does not apply.
+- **Scope:** November 3 chamber-control, Senate, House and governor winner markets. No props, combos or primaries in discovery. Positions only if stake >= $2,500 (same floor as EXP-037).
+- **Cutoff:** entries before polls opened on November 3 in that race's state; for national markets, before the first opening in any state. Early-vote data is allowed. Later entries are not scored.
+- **Score:** forecast skill against the market price at entry, stake-weighted, one score per race, cap prices to [.05, .95]. A position shows a direction and a price, not a probability, so the implied forecast is the entry price moved 5 points toward the side taken, and the score is its log-loss advantage over the entry price. P/L is reported beside it and is not a pass condition. CIs cluster by race; they do not remove the shared national swing, which is what the persistence tests below are for.
+- **To qualify:** >= 5 distinct races and >= 2 differentiated calls, win or lose: a side priced under 50¢ at entry, or against the party the wallet backs in most of its races. Wallets holding both sides of a market are treated as market makers and removed.
+- **Conviction (tested, not required):** each measure separately, within wallet: stake > 2x own median (as EXP-034); stake >= 10% of peak capital deployed in the prior 90 days, a proxy for bankroll; stake >= $10,000 entered >= 14 days before Election Day. Pass: high-conviction races beat the same wallets' other races, CI excluding zero, >= 40 races.
+- **Pre-registered, step 1 (historical cut, before forward test):** freeze qualifiers from the midterm core, then grade them only on separate political markets: 2026 primaries, the 2024 general, other resolved politics markets. A wallet survives with >= 10 independent held-out markets and a positive score. The surviving cohort passes only if its pooled held-out score beats the market with a CI excluding zero. If not, write "nothing survives".
+- **Pre-registered, step 2 (forward test):** freeze the survivors, then score them on political markets that open or are entered after the freeze. A wallet graduates at >= 30 independent resolved markets with a stake-weighted log-loss advantage whose clustered CI excludes zero.
+- **Watch tier:** qualifiers with no history outside the midterms cannot pass step 1. They are kept apart, flagged, and can only graduate through step 2.
+- **Open markets:** races unresolved at collection are left out and listed. Discovery reruns once when they resolve, before step 1 is graded.
+- **Check before scoring:** rebuild positions from trades plus splits, merges, conversions and redemptions, and reconcile a sample of wallets to Polymarket's reported P/L. Trade-only P/L is unreliable on multi-outcome markets.

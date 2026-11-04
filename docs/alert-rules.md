@@ -11,7 +11,7 @@ Numbers are as of **2026-10-07** (rules changed the same day — see the ledger'
 ## 0. The pipeline in one line
 
 wallet pool → open pre-game positions → `passes()` gate → conviction **v4**
-score → **alert ≥ 65** (email, 15 min) → **pick ≥ 70 inside −122..−180**
+score → **alert ≥ 65** (email, 15 min) → **pick ≥ 70** (price window off since 2026-10-27, §4)
 (X/Discord, 10 min, pre-kickoff) → **core ≥ 80** → size **s5** → settle
 nightly → CLV vs the Polymarket close.
 
@@ -95,6 +95,16 @@ of kept rows ≥ before. Fail → `LINEMOVE_GATE = False`, column stays.
 `move`/`move_tier` are logged on every signal and pick.
 
 ## 4. Price is a filter — `picks.qualifies()`
+
+> **SUSPENDED 2026-10-27 (Santhosh: "remove the rule for now").**
+> `picks.PRICE_WINDOW = False`: neither the sharp's entry nor the book price is
+> gated on odds, the `form.price_window` overrides are moot, and `alertpost.py`
+> no longer skips long-dog book prices. The X card stops claiming the filter.
+> Set `PRICE_WINDOW = True` to restore the rule below exactly. Not changed:
+> `tail.py`'s own +150..−180 tail window, and the 0.5u cap `units.py` puts on
+> price_max-override traders above −180. The evidence below still says
+> underdogs lost in both build windows; this is a judgment call, logged so
+> post-change picks can be cut apart from earlier ones.
 
 A graded pick needs **both** the sharp's entry and the book price inside
 **−122..−180** (probability 0.55–0.643). Also: no period markets (1H, 1Q,

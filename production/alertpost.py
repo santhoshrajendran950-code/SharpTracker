@@ -55,7 +55,7 @@ def will_be_pick(h, okey):
     bettable, _ = P.prices(h, okey, want=1)
     if not bettable:
         return False, "no book price"
-    if bettable[0][1] > picks.PICK_MAX_DOG:
+    if picks.PRICE_WINDOW and bettable[0][1] > picks.PICK_MAX_DOG:
         return False, f"book price +{bettable[0][1]} is a long dog"
     return True, ""
 

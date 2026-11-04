@@ -93,6 +93,15 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
 """ % dict(W=W, H_HEAD=H_HEAD, H_COLS=H_COLS, H_ROW=H_ROW, H_FOOT=H_FOOT)
 
 
+
+try:
+    import picks as _picks
+    _WINDOW = _picks.PRICE_WINDOW
+except Exception:
+    _WINDOW = True
+_WIN_SUB = "; only −122 to −180 favourites are sized" if _WINDOW else ""
+_WIN_FOOT = " Picks are filtered to −122 … −180 separately." if _WINDOW else ""
+
 def _start(h):
     s = h.get("start")
     if isinstance(s, str):
@@ -171,7 +180,7 @@ def build(rows, label):
         '<div class="head"><div class="kicker">Sharp money board</div>'
         f'<div class="title">{html.escape(label)}</div>'
         '<div class="sub">What tracked sharp wallets are holding right now. '
-        'CONV rates the bettor; only −122 to −180 favourites are sized.</div>'
+        f'CONV rates the bettor{_WIN_SUB}.</div>'
         f'<div class="stamp"><b>{now:%a %b %-d · %-I:%M %p} {now:%Z}</b><br>'
         f'{len(rows)} plays · {anon.money(tracked)} tracked</div></div>'
         '<div class="cols"><div>CONV</div><div>SIZE</div><div>PLAY</div>'
@@ -179,8 +188,8 @@ def build(rows, label):
         f'<div>{"".join(_row(h) for h in shown)}</div>'
         f'<div class="foot"><div><span class="key"><b>CONV</b> (0–100) rates the '
         'trader, not the odds: career hold, the size of this wager, and whether '
-        'the price has moved since they bet. Picks are filtered to −122 … −180 '
-        'separately. Not a win probability. <b>SIZE</b> is the stake in units.</span><br>'
+        f'the price has moved since they bet.{_WIN_FOOT} '
+        'Not a win probability. <b>SIZE</b> is the stake in units.</span><br>'
         f'{more}Informational only — what anonymous traders hold. Not advice. '
         'Unit sizing is still in testing. Every call is settled publicly, win or lose.</div>'
         f'<div><b>{HANDLE}</b></div></div>')
