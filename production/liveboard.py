@@ -444,6 +444,30 @@ def build(now=None):
     return rows, sorted(failed)
 
 
+def play_cell(r):
+    """One play as a table cell. Sharp Alert is the default, so only others are tagged."""
+    tag = "" if r["email"] == "Sharp Alert" else f" [{r['email']}]"
+    return f"{r['play']} ({r['entry']}): {r['status']}{tag}"
+
+
+def wide_lines(rows):
+    """A header plus one line per game, with its plays as Play 1, Play 2, ... columns.
+    Rows arrive sorted, so games keep the board's order: live, upcoming, final."""
+    games = {}
+    for r in rows:
+        g = games.setdefault((r["league"], r["game"], r["start"]), {"first": r, "cells": []})
+        g["cells"].append(play_cell(r))
+    width = max((len(g["cells"]) for g in games.values()), default=0)
+    out = []
+    if games:
+        out.append(["League", "Game", "Score", "Clock"] + [f"Play {i + 1}" for i in range(width)])
+    for g in games.values():
+        r = g["first"]
+        out.append([r["league"], r["game"] or "", r["score"], r["clock"] or r["time"]]
+                   + g["cells"] + [""] * (width - len(g["cells"])))
+    return out
+
+
 def main():
     rows, failed = build()
     if "--json" in sys.argv:
@@ -452,9 +476,8 @@ def main():
     for f in failed:
         print(f"!! score feed failed: {f}")
     if "--wide" in sys.argv:
-        for r in rows:
-            print(" | ".join([r["league"], r["game"] or "", r["score"], r["clock"] or r["time"],
-                              r["play"], r["entry"], r["status"], r["email"]]))
+        for line in wide_lines(rows):
+            print(" | ".join(line))
         return 0
     if not rows:
         print("No emailed sharp plays on today's games in these competitions.")

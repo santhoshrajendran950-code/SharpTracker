@@ -109,6 +109,23 @@ class Tennis(unittest.TestCase):
         self.assertEqual(L.status(p, *hit), "Lost")
 
 
+class Wide(unittest.TestCase):
+    def row(self, game, play, email="Sharp Alert"):
+        return {"league": "NBA", "game": game, "score": "1-0", "clock": "Q1", "time": "8 PM",
+                "start": "s-" + game, "play": play, "entry": "+100", "status": "Tied", "email": email}
+
+    def test_one_line_per_game_with_play_columns(self):
+        lines = L.wide_lines([self.row("A vs. B", "A ML"), self.row("A vs. B", "A +3", "Rule-based"),
+                              self.row("C vs. D", "C ML")])
+        self.assertEqual(lines[0], ["League", "Game", "Score", "Clock", "Play 1", "Play 2"])
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(lines[1][4:], ["A ML (+100): Tied", "A +3 (+100): Tied [Rule-based]"])
+        self.assertEqual(lines[2][4:], ["C ML (+100): Tied", ""])
+
+    def test_empty_board_prints_no_header(self):
+        self.assertEqual(L.wide_lines([]), [])
+
+
 class Matching(unittest.TestCase):
     def test_wrong_day_game_is_rejected(self):
         p = play("Jazz vs. Pelicans", "Jazz vs. Pelicans", "Jazz")
