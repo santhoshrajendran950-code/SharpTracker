@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.nightlyline.outside</string>
+  <key>ProgramArguments</key>
+  <array><string>/usr/bin/python3</string><string>/Users/santhosh/.nightly-line/outside.py</string></array>
+  <key>WorkingDirectory</key><string>/Users/santhosh/.nightly-line</string>
+  <key>StartInterval</key><integer>3600</integer>
+  <key>StandardOutPath</key><string>/Users/santhosh/.nightly-line/outside.log</string>
+  <key>StandardErrorPath</key><string>/Users/santhosh/.nightly-line/outside.err.log</string>
+</dict>
+</plist>
