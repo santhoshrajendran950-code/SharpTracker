@@ -325,6 +325,17 @@ def _start(s):
         return None
 
 
+def wallet_names():
+    """wallet -> board name, in the form signals.jsonl stores it. Empty if unreadable,
+    which only means a play may list every logged sharp on that side."""
+    try:
+        import check as chk
+        store = json.load(open(os.path.join(HERE, "wallethist.json"))).get("wallets") or {}
+        return {w: chk.short(x["user"], w) for w, x in store.items() if x.get("user")}
+    except (OSError, ValueError, ImportError):
+        return {}
+
+
 def load_plays(now):
     """{(slug, market, side): play} for everything emailed that is in scope today."""
     plays = {}
@@ -337,6 +348,7 @@ def load_plays(now):
     except (OSError, ValueError):
         pass
     if wanted:
+        names = wallet_names()
         for r in _lines(SIGNALS):
             k = (r.get("slug"), r.get("market"), r.get("side"))
             if k not in wanted or not r.get("start"):
@@ -345,12 +357,15 @@ def load_plays(now):
             if p is None:
                 plays[k] = {"slug": k[0], "market": k[1], "side": k[2], "game": r.get("game"),
                             "start": _start(r["start"]), "entry": r.get("entry"),
-                            "users": set(), "emails": {"Sharp Alert"}, "_alert": r.get("source") == "alert"}
+                            "sharps": {}, "emails": {"Sharp Alert"}, "_alert": r.get("source") == "alert"}
                 p = plays[k]
             elif r.get("source") == "alert" and not p["_alert"]:
                 p["entry"], p["_alert"] = r.get("entry"), True   # the price the email showed
-            if r.get("user"):
-                p["users"].add(r["user"])
+            # signals.jsonl has names but the alert ledger has wallets. Keep only the
+            # wallets that were emailed, unless one has no stored name to compare.
+            emailed = [names.get(w) for w in wanted[k]]
+            if r.get("user") and (None in emailed or r["user"] in emailed):
+                p["sharps"][r["user"]] = {"hold": r.get("hold"), "stake": r.get("stake")}  # latest wins
     for r in _lines(RULE_LEDGER):
         if not comp_of(r.get("slug")):
             continue
@@ -359,9 +374,11 @@ def load_plays(now):
         if p is None:
             p = plays[k] = {"slug": k[0], "market": k[1], "side": k[2], "game": r.get("game"),
                             "start": _start(r.get("start")), "entry": r.get("entry"),
-                            "users": set(), "emails": set(), "_alert": False}
+                            "sharps": {}, "emails": set(), "_alert": False}
         p["emails"].add("Rule-based +conv" if ">=70" in (r.get("title") or "") else "Rule-based")
-        p["users"].update(r.get("users") or [])
+        for s in r.get("sharps") or [{"user": u} for u in r.get("users") or []]:
+            if s.get("user"):
+                p["sharps"].setdefault(s["user"], {"hold": s.get("hold"), "stake": s.get("stake")})
 
     today = now.astimezone().date()
     keep = {}
@@ -427,7 +444,9 @@ def build(now=None):
         hit = match(p, feeds.get(path, []))
         row = {"league": p["league"], "game": p["game"], "play": play_label(p),
                "entry": chk.am(p.get("entry")), "email": " + ".join(sorted(p["emails"])),
-               "sharps": sorted(p["users"]), "start": p["start"].isoformat(),
+               "sharps": sorted(({"user": u, **s} for u, s in p["sharps"].items()),
+                                key=lambda s: -(s.get("stake") or 0)),
+               "start": p["start"].isoformat(),
                "time": p["start"].astimezone().strftime("%-I:%M %p")}
         if hit:
             c, first = hit
@@ -444,10 +463,23 @@ def build(now=None):
     return rows, sorted(failed)
 
 
+def money(x):
+    if x is None:
+        return "wager n/a"
+    return f"${x / 1000:,.1f}K" if x >= 1000 else f"${x:,.0f}"
+
+
+def sharp_text(s):
+    """'primm, 7.2% hold, $3.4K'. Hold is lifetime, as logged on the live row."""
+    hold = "hold n/a" if s.get("hold") is None else f"{s['hold']:.1f}% hold"
+    return f"{s['user']}, {hold}, {money(s.get('stake'))}"
+
+
 def play_cell(r):
     """One play as a table cell. Sharp Alert is the default, so only others are tagged."""
     tag = "" if r["email"] == "Sharp Alert" else f" [{r['email']}]"
-    return f"{r['play']} ({r['entry']}): {r['status']}{tag}"
+    who = "; ".join(sharp_text(s) for s in r.get("sharps") or [])
+    return f"{r['play']} ({r['entry']}): {r['status']}{tag}" + (f" · {who}" if who else "")
 
 
 def wide_lines(rows):
@@ -483,7 +515,7 @@ def main():
         print("No emailed sharp plays on today's games in these competitions.")
     for r in rows:
         print(f"{r['league']:<15} {r['game']}  {r['score']}  [{r['clock'] or r['time']}]\n"
-              f"{'':15} {r['play']} ({r['entry']}, {r['email']}): {r['status']}")
+              f"{'':15} {play_cell(r)}")
     return 0
 
 

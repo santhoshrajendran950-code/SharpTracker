@@ -122,6 +122,14 @@ class Wide(unittest.TestCase):
         self.assertEqual(lines[1][4:], ["A ML (+100): Tied", "A +3 (+100): Tied [Rule-based]"])
         self.assertEqual(lines[2][4:], ["C ML (+100): Tied", ""])
 
+    def test_cell_carries_each_sharp(self):
+        r = self.row("A vs. B", "A ML")
+        r["sharps"] = [{"user": "primm", "hold": 7.21, "stake": 3383.0},
+                       {"user": "small", "hold": 2.0, "stake": 900.0},
+                       {"user": "ruleonly"}]
+        self.assertEqual(L.play_cell(r), "A ML (+100): Tied · primm, 7.2% hold, $3.4K; "
+                                         "small, 2.0% hold, $900; ruleonly, hold n/a, wager n/a")
+
     def test_empty_board_prints_no_header(self):
         self.assertEqual(L.wide_lines([]), [])
 
