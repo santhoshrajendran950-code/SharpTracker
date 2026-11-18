@@ -177,7 +177,7 @@ def main():
     # league args (e.g. `bigboard.py nfl atp`) shrink the slate massively —
     # 7 tags/400 games down to 2 tags/~30, which is the whole runtime.
     TAG_FOR = {"nfl": "nfl", "ncaaf": "cfb", "cfb": "cfb", "mlb": "mlb",
-               "nba": "nba", "wnba": "wnba", "nhl": "nhl", "ncaab": "cbb", "cbb": "cbb", "pga": "golf",
+               "nba": "nba", "wnba": "wnba", "nhl": "nhl", "ncaab": "ncaa-basketball", "cbb": "ncaa-basketball", "pga": "golf",
                "golf": "golf", "atp": "tennis", "wta": "tennis", "tennis": "tennis",
                # soccer is per-competition: the "soccer" tag caps at gamma's 2000-event
                # offset and silently drops midweek UCL, so allow the competition tag
@@ -221,6 +221,9 @@ def main():
             lg = chk.league_for(tag, slug)
             if want_leagues and lg not in want_leagues:
                 continue
+            # Power 4 filter on the default board only; `bigboard.py ncaab` shows every game
+            if not picked and not chk.keep_event(lg, e.get("title")):
+                continue
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug, "start": st})
 
     pool = chk.build_pool()      # shared: ALL/PNL + MONTH/PNL, deduped
@@ -255,7 +258,7 @@ def main():
             hits.append({
                 "wallet": tr["proxyWallet"],
                 "user": chk.short(tr.get("userName"), tr["proxyWallet"]),
-                "rank": int(tr["rank"]), "pnl": tr.get("pnl") or 0, "vol": vol,
+                "rank": int(tr.get("rank") or 0), "pnl": tr.get("pnl") or 0, "vol": vol,
                 "hold": (tr["pnl"] / vol * 100) if vol else 0.0,
                 "month_pnl": tr.get("month_pnl"), "month_vol": tr.get("month_vol"),
                 "slug": base, "league": slate[base]["league"], "game": slate[base]["title"],
@@ -374,7 +377,7 @@ def main():
             if h.get("two_sided"):
                 flags.append("BOTH SIDES — hedger")
             if h.get("thin"):
-                flags.append(f"THIN RECORD — {chk.m0(h['prior_pnl'])} on {chk.m0(h['prior_vol'])} before this month, no play")
+                flags.append(f"THIN RECORD — {chk.m0(h.get('month_pnl') or 0)} on {chk.m0(h.get('month_vol') or 0)} in the last 30d, no play")
             if h.get("cold"):
                 flags.append(f"COLD — {h['month_hold']:+.1f}% on {chk.m0(h.get('month_vol') or 0)} this month, no play")
             elif h.get("hedged"):

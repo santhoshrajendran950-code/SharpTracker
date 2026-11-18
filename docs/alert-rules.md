@@ -347,3 +347,13 @@ correct but holds one event until the NCAAB season opens.
 
 Verified in production at 11:15 EDT: 5 plays emailed, 2 listed as withheld, and
 a second run over the same state printed nothing — no duplicate sends.
+
+## NCAAB: live tag fixed, Power 4 games only (2026-11-17, Santhosh)
+
+"Start sending out notifications for power conference games like these. Any teams in the power 4 conferences."
+
+- **Bug found:** `check.TAGS` asked gamma for `cbb`, which returns **zero** NCAAB events this season; every game is under `ncaa-basketball` (65 on 11-17). Until today the Sharp Alert, Pre-Slate / Closing Look emails and the big board never saw a college basketball game.
+- **Fix:** `TAGS` uses `ncaa-basketball` (mapped to league `NCAAB`); `bigboard.py ncaab` follows.
+- **Filter:** `check.keep_event()` keeps an NCAAB game only if **either side** is one of the 68 Power 4 schools in `check.POWER4_NCAAB` (ACC, Big Ten, Big 12, SEC, 2026-27 membership), matched exactly on gamma's "School Mascot" title because prefixes collide ("Kansas" / "Kansas City Roos"). Applied in the Sharp Alert, `windows.py` and the default big board. `bigboard.py ncaab` still shows every game. Big East is **not** included.
+- **Rule unchanged:** NCAAB rows go through the same gate, score and alert ≥ 65 threshold as every league. The gate has not been validated on NCAAB (EXP-037 blocked), so treat early NCAAB alerts as informational. First night: 19 Power 4 games in the next 36h, 0 qualifying positions.
+
