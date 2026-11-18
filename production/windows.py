@@ -69,6 +69,8 @@ def build_slate(now):
                 continue
             slug = e["slug"]
             lg = chk.league_for(tag, slug)
+            if not chk.keep_event(lg, e.get("title")):
+                continue
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug,
                                     "start": st})
     return slate
@@ -231,6 +233,15 @@ def main():
     finally:
         rel()
     good = [h for h in hits if qualifies(h)]
+    # NBA: one play per game, none where emailed sharps disagree (2026-11-05). The
+    # lock is shared with the Sharp Alert, so every email names the same play.
+    nba_held = 0
+    try:
+        before = len(good)
+        good, _, _ = chk.nba_one_per_game(good, now, lock=not dry)
+        nba_held = before - len(good)
+    except Exception as e:
+        print(f"(nba one-per-game skipped: {e})", file=sys.stderr)
     good.sort(key=lambda h: -h["conv"])
     emails = []
 
@@ -240,7 +251,8 @@ def main():
                 f"first kickoff {first.astimezone():%-I:%M %p} (in {mins_to_first:.0f} min)",
                 f"{len(slate)} games today · {pool_n-bad}/{pool_n} wallets"
                 + (f" · !! {bad} FAILED, PARTIAL" if bad else ""),
-                f"{len(rows)} plays scoring {THRESHOLD:.0f}+", ""]
+                f"{len(rows)} plays scoring {THRESHOLD:.0f}+"
+                + (f" · {nba_held} more NBA held back (one play per game)" if nba_held else ""), ""]
         body += [fmt_play(h, now) + "\n" for h in rows] or ["Nothing clears the bar yet.\n"]
         body.append("Informational only — what anonymous traders hold. Not advice.")
         emails.append((f"Pre-Slate Board — {len(rows)} play(s) {THRESHOLD:.0f}+",

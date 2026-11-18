@@ -54,6 +54,58 @@ NEW=$(/usr/bin/python3 picks.py --scan "$BOARD" --log 2>>"$LOG" | head -1)
 echo "[$(date '+%F %T %Z')] $NEW · board ${DUR}s" >> "$LOG"
 case "$NEW" in 0\ new*|"") rm -f "$BOARD"; exit 0 ;; esac
 
+# Recommended-bet email (Santhosh, 2026-11-17: "Emails to me · Closing look and
+# recommended bets"). Same inbox as the Closing Look, deliberately no BCC. Sent
+# before X/Discord so a failed post never holds the email back; e_mailed in
+# picks.jsonl stops a resend on the next scan.
+EMAIL_TO="YOUR_EMAIL@example.com"
+. "$(dirname "$0")/sendmail.sh"
+PICKBODY=/tmp/.picks-email-body.txt
+PSUBJ=$(/usr/bin/python3 - "$PICKBODY" 2>>"$LOG" <<'PY'
+import sys, os
+sys.path.insert(0, os.getcwd())
+import picks
+from datetime import datetime, timezone, timedelta
+cut = datetime.now(timezone.utc) - timedelta(minutes=30)
+fresh = [p for p in picks.load() if not p.get("e_mailed")
+         and datetime.fromisoformat(p["posted_at"]) >= cut]
+if fresh:
+    parts = [f"{len(fresh)} recommended bet(s) · {datetime.now().astimezone():%a %-I:%M %p %Z}", ""]
+    for p in fresh:
+        parts += [picks.discord_text(p), "", "-" * 40, ""]
+    parts.append("Informational only, not advice.")
+    open(sys.argv[1], "w").write("\n".join(parts) + "\n")
+    top = fresh[0]
+    more = f" (+{len(fresh) - 1} more)" if len(fresh) > 1 else ""
+    odds = f" {top['odds']:+d}" if top.get("odds") else ""
+    print(f"Recommended bet — {top.get('league', '')} {top['pick']}{odds} · {picks.U.fmt(top['units'])}{more}")
+PY
+)
+if [ -n "$PSUBJ" ] && [ -s "$PICKBODY" ]; then
+  if send_mail "$PSUBJ" "$PICKBODY" "$EMAIL_TO"; then
+    /usr/bin/python3 - 2>>"$LOG" <<'PY'
+import sys, os, json
+sys.path.insert(0, os.getcwd())
+import picks
+from datetime import datetime, timezone, timedelta
+cut = datetime.now(timezone.utc) - timedelta(minutes=30)
+rows = picks.load()
+for p in rows:
+    if not p.get("e_mailed") and datetime.fromisoformat(p["posted_at"]) >= cut:
+        p["e_mailed"] = True
+tmp = picks.PICKS + ".tmp"
+with open(tmp, "w") as f:
+    for r in rows:
+        f.write(json.dumps(r) + "\n")
+os.replace(tmp, picks.PICKS)
+PY
+    echo "[$(date '+%F %T %Z')] emailed '$PSUBJ' to $EMAIL_TO" >> "$LOG"
+  else
+    echo "[$(date '+%F %T %Z')] pick email FAILED: '$PSUBJ'" >> "$LOG"
+  fi
+fi
+rm -f "$PICKBODY"
+
 /usr/bin/python3 - >> "$LOG" 2>&1 <<'PY'
 import sys, json, os
 sys.path.insert(0, os.getcwd())   # every runner cd's to its own dir first

@@ -61,7 +61,7 @@ MODEL_VERSION = "v4"
 LINEMOVE = True         # EXP-030 (2026-10-07): stamp every row with the line-move tier
                         # (linemove.py). "toward" rows go first in the email; "away"/"flat"
                         # (the bottom 60% by predicted move) are alerts only — picks.py gates.
-TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soccer",
+TAGS = ["nfl", "cfb", "nba", "ncaa-basketball", "mlb", "wnba", "nhl", "tennis", "golf", "soccer",
         "ucl", "uel", "uecl", "epl", "la-liga", "serie-a", "bundesliga", "ligue-1",
         "ufc"]
 # wnba, nhl added 2026-09-30; ucl, uel 2026-10-13; the rest 2026-10-21.
@@ -78,11 +78,57 @@ TAGS = ["nfl", "cfb", "nba", "cbb", "mlb", "wnba", "nhl", "tennis", "golf", "soc
 # "ligue1", "ncaab" and "college-basketball" all return zero events; the live
 # spellings are the hyphenated ones below. "cbb" is correct but holds a single
 # event until the NCAAB season opens.
-LEAGUE_FOR_TAG = {"cfb": "NCAAF", "cbb": "NCAAB", "golf": "PGA",
+LEAGUE_FOR_TAG = {"cfb": "NCAAF", "cbb": "NCAAB", "ncaa-basketball": "NCAAB", "golf": "PGA",
                   "soccer": "SOCCER", "ucl": "SOCCER", "uel": "SOCCER",
                   "uecl": "SOCCER", "epl": "SOCCER", "la-liga": "SOCCER",
                   "serie-a": "SOCCER", "bundesliga": "SOCCER",
                   "ligue-1": "SOCCER", "ufc": "UFC"}
+
+
+# NCAAB tag + Power 4 filter, 2026-11-17 (Santhosh: "Start sending out
+# notifications for power conference games ... Any teams in the power 4
+# conferences"). "cbb" returned ZERO games this season; every NCAAB game is
+# under "ncaa-basketball", so until today the alerts and boards never saw one.
+# Of ~65 NCAAB games a night most are low-major, thinly traded and never draw a
+# sharp, so the slate keeps a game only if EITHER side is a Power 4 school
+# (ACC, Big Ten, Big 12, SEC, 2026-27 membership). Names are matched exactly
+# against gamma's "School Mascot" titles, because prefixes collide ("Kansas" vs
+# "Kansas City Roos", "Texas" vs "Texas A&M-Corpus Christi"). Big East is NOT in.
+POWER4_NCAAB = frozenset([
+    # ACC
+    "Boston College Eagles", "California Golden Bears", "Clemson Tigers",
+    "Duke Blue Devils", "Florida State Seminoles", "Georgia Tech Yellow Jackets",
+    "Louisville Cardinals", "Miami Hurricanes", "North Carolina State Wolfpack",
+    "North Carolina Tar Heels", "Notre Dame Fighting Irish", "Pittsburgh Panthers",
+    "SMU Mustangs", "Stanford Cardinal", "Syracuse Orange", "Virginia Cavaliers",
+    "Virginia Tech Hokies", "Wake Forest Demon Deacons",
+    # Big Ten
+    "Illinois Fighting Illini", "Indiana Hoosiers", "Iowa Hawkeyes",
+    "Maryland Terrapins", "Michigan Wolverines", "Michigan State Spartans",
+    "Minnesota Golden Gophers", "Nebraska Cornhuskers", "Northwestern Wildcats",
+    "Ohio State Buckeyes", "Oregon Ducks", "Penn State Nittany Lions",
+    "Purdue Boilermakers", "Rutgers Scarlet Knights", "UCLA Bruins", "USC Trojans",
+    "Washington Huskies", "Wisconsin Badgers",
+    # Big 12
+    "Arizona Wildcats", "Arizona State Sun Devils", "Baylor Bears", "BYU Cougars",
+    "Cincinnati Bearcats", "Colorado Buffaloes", "Houston Cougars",
+    "Iowa State Cyclones", "Kansas Jayhawks", "Kansas State Wildcats",
+    "Oklahoma State Cowboys", "TCU Horned Frogs", "Texas Tech Red Raiders",
+    "UCF Knights", "Utah Utes", "West Virginia Mountaineers",
+    # SEC
+    "Alabama Crimson Tide", "Arkansas Razorbacks", "Auburn Tigers", "Florida Gators",
+    "Georgia Bulldogs", "Kentucky Wildcats", "LSU Tigers", "Mississippi State Bulldogs",
+    "Missouri Tigers", "Oklahoma Sooners", "Ole Miss Rebels", "South Carolina Gamecocks",
+    "Tennessee Volunteers", "Texas Longhorns", "Texas A&M Aggies", "Vanderbilt Commodores",
+])
+
+
+def keep_event(lg, title):
+    """Slate filter shared by check/bigboard/windows: NCAAB games need a Power 4
+    side; every other league passes untouched."""
+    if lg != "NCAAB":
+        return True
+    return any(side.strip() in POWER4_NCAAB for side in (title or "").split(" vs. "))
 
 
 def league_for(tag, slug):
@@ -101,13 +147,14 @@ def league_for(tag, slug):
 # tightened set excluded the highest-hold wallets via a lifetime-P/L floor that
 # rewarded churn rather than skill). --strict re-applies the tighter set.
 MIN_HOLD, MIN_PNL, MIN_STAKE = 1.5, 250_000, 2_500
-# Track-record depth + form, 2026-10-14 (raybanman / LASK). The lifetime bars
-# must have been earned BEFORE the last 30 days: a 35-day-old wallet with 18
-# settled positions cleared both on one hot fortnight, then bet $2M on one
-# match. And a wallet losing >3% on >$1M this month is not a read today,
+# Track-record depth + form. 2026-10-14 (raybanman / LASK) required these bars to
+# be earned BEFORE the last 30 days. Santhosh, 2026-11-05 ("have the rule be in
+# the last 30 days, not before"): they now apply to the LAST 30 days, so a wallet
+# with no recent profit is thin however good its career, and a hot new wallet
+# passes. And a wallet losing >3% on >$1M this month is not a read today,
 # whatever its lifetime says. Month rows for losing wallets are not in the
 # MONTH top-500, so annotate_record() looks them up per wallet.
-MIN_PRIOR_PNL, MIN_PRIOR_VOL = 250_000, 2_000_000
+MIN_MONTH_PNL, MIN_MONTH_VOL = 250_000, 2_000_000
 FORM_MIN_VOL, FORM_MAX_LOSS = 1_000_000, -3.0
 MIN_ENTRY, MAX_ENTRY = 0.02, 0.90
 MIN_SCORE = 0.0
@@ -133,7 +180,7 @@ def get(url, retries=RETRIES):
         return dataapi.fetch(url, get)
     for a in range(retries + 1):
         pace.wait(url)      # data-api: ~200-request bucket at ~17/s, see pace.py
-        p = subprocess.run(["curl", "-s", "--max-time", "15", "-w", "\n%{http_code}", url],
+        p = subprocess.run(["curl", "-s", "--compressed", "--max-time", "15", "-w", "\n%{http_code}", url],
                            capture_output=True, text=True)
         body, _, code = p.stdout.rpartition("\n")
         if code == "200":
@@ -479,6 +526,64 @@ XG_MULT = 2.0     # ...and be betting more than this x ITS OWN career median
 XG_NEED = 2       # ...and there must be this many of them on the side
 
 
+NBA_LOCK = os.path.join(HERE, "nba-email-lock.json")   # slug -> the one play its emails may carry
+
+
+def nba_one_per_game(rows, now=None, lock=True):
+    """NBA email hygiene (Santhosh, 2026-11-05: "yes lets build 1").
+
+    1. A game + bet type (the `_lean` group: side or total) with emailed rows on BOTH
+       sides is dropped. The emailed sharps disagree, so there is no play.
+    2. What is left is ONE play per game: the biggest wager. Every other line of the
+       same opinion (Jazz ML + Jazz +4.5 + Jazz +5.5) is held back.
+    3. The first play a game emails is locked in NBA_LOCK, so the Sharp Alert, the
+       Pre-Slate Board and the Closing Look all name the same play. If that play
+       drops off the board or turns contested, the game is left out, not swapped.
+
+    Measured, not an edge: on this season's 157 emailed NBA plays it cut the loss from
+    -25.8u to -9.8u at about the same ROI per play. On 2025-26 it ran +2.3% / +7.2%.
+    Other leagues pass through untouched. -> (kept rows, n disputed, n duplicate)."""
+    nba = [h for h in rows if h.get("league") == "NBA"]
+    rest = [h for h in rows if h.get("league") != "NBA"]
+    sides = defaultdict(set)
+    for h in nba:
+        g, t = _lean(h)
+        sides[(h["slug"], g)].add(t)
+    clean = [h for h in nba if len(sides[(h["slug"], _lean(h)[0])]) == 1]
+    disputed = len(nba) - len(clean)
+    best = {}
+    for h in clean:
+        if h["slug"] not in best or (h.get("stake") or 0) > (best[h["slug"]].get("stake") or 0):
+            best[h["slug"]] = h
+    pk = lambda h: f"{h['wallet']}|{h['market']}|{h['side']}"
+    if lock:
+        try:
+            locks = json.load(open(NBA_LOCK))
+        except (OSError, ValueError):
+            locks = {}
+        byslug = defaultdict(list)
+        for h in clean:
+            byslug[h["slug"]].append(h)
+        for slug in list(best):
+            want = locks.get(slug)
+            if want:
+                hit = [h for h in byslug[slug] if pk(h) == want]
+                if hit:
+                    best[slug] = hit[0]
+                else:
+                    del best[slug]            # locked play gone or now disputed
+            else:
+                locks[slug] = pk(best[slug])
+        cut = ((now or datetime.now(timezone.utc)) - timedelta(days=3)).strftime("%Y-%m-%d")
+        locks = {s: v for s, v in locks.items() if s[-10:] >= cut}
+        tmp = NBA_LOCK + ".tmp"
+        json.dump(locks, open(tmp, "w"))
+        os.replace(tmp, NBA_LOCK)
+    kept_ids = {id(h) for h in best.values()}
+    kept = [h for h in rows if h.get("league") != "NBA" or id(h) in kept_ids]
+    return kept, disputed, len(clean) - len(best)
+
+
 def mark_xgate(hits):
     """Stamp `xg_sharps` / `xg_ok`: distinct qualifying sharps on this row's own
     side who each clear XG_HOLD and sit above XG_MULT x their OWN career median.
@@ -566,7 +671,7 @@ def passes(h, min_hold=MIN_HOLD, min_pnl=MIN_PNL, min_stake=MIN_STAKE,
     return (h["hold"] >= min_hold and h["pnl"] >= min_pnl
             and h["stake"] >= min_stake and not h["decided"]
             and not h.get("two_sided")          # hedger's book, not a read
-            and not h.get("thin")               # record rests on the last 30 days
+            and not h.get("thin")               # under the bars in the last 30 days
             and not h.get("cold")               # losing >3% on >$1M this month
             and lo <= h["entry"] <= hi and h["conv"] >= min_score)
 
@@ -578,7 +683,7 @@ def annotate_record(hits):
     ranks the top 500 by P/L, so a wallet losing this month has no month row in
     the pool; for every wallet that clears the lifetime bars and lacks one, look
     its month row up directly (one paced call each, only wallets on the slate).
-    Sets thin (prior P/L or volume below MIN_PRIOR_*) and cold (month hold under
+    Sets thin (month P/L or volume below MIN_MONTH_*) and cold (month hold under
     FORM_MAX_LOSS on at least FORM_MIN_VOL); passes() refuses both.
     """
     need = {h["wallet"] for h in hits
@@ -601,7 +706,7 @@ def annotate_record(hits):
         h["prior_pnl"] = h["pnl"] - mp
         h["prior_vol"] = h["vol"] - mv
         h["month_hold"] = (mp / mv * 100) if mv else None
-        h["thin"] = h["prior_pnl"] < MIN_PRIOR_PNL or h["prior_vol"] < MIN_PRIOR_VOL
+        h["thin"] = mp < MIN_MONTH_PNL or mv < MIN_MONTH_VOL
         h["cold"] = mv >= FORM_MIN_VOL and h["month_hold"] < FORM_MAX_LOSS
 
 
@@ -662,6 +767,8 @@ def main():
                 continue
             slug = e["slug"]
             lg = league_for(tag, slug)
+            if not keep_event(lg, e.get("title")):
+                continue
             slate.setdefault(slug, {"league": lg, "title": e.get("title") or slug, "start": st})
 
     if not slate:
@@ -735,6 +842,18 @@ def main():
         import linemove
         for h in hits:
             h["move_tier"], h["move"] = linemove.tier(h)
+    if "--rule-json" in sys.argv:
+        # ruleplay.py (2026-11-04): the full sweep, stamped for EXP-034, so its
+        # veto sees every wallet. A failure here must never cost the normal alert.
+        try:
+            import wallethist
+            wallethist.annotate(hits)
+            mark_xgate(hits)
+            with open(sys.argv[sys.argv.index("--rule-json") + 1], "w") as jf:
+                json.dump([{k: (v.isoformat() if hasattr(v, "isoformat") else v)
+                            for k, v in h.items()} for h in hits], jf)
+        except Exception as e:
+            print(f"(rule-based plays skipped: {e})", file=sys.stderr)
 
     gate = functools.partial(passes, min_hold=min_hold, min_pnl=min_pnl,
                              min_stake=min_stake, lo=lo, hi=hi, min_score=min_score)
@@ -825,6 +944,18 @@ def main():
                 and (h.get("opposed") or 0) >= 1
                 and key(h) not in alerted and key(h) not in noted]
         fresh = [h for h in new if (h.get("opposed") or 0) < 1]
+        # NBA: one play per game, none where emailed sharps disagree (2026-11-05).
+        # Chosen from every emailable row, not just the new ones, so the pick stays
+        # stable from run to run and matches the Closing Look.
+        nba_held = 0
+        try:
+            pool_ = [h for h in good if h["conv"] >= alert and (h.get("opposed") or 0) < 1]
+            kept_, _, _ = nba_one_per_game(pool_, now)
+            ok_ = {id(h) for h in kept_}
+            nba_held = sum(1 for h in fresh if id(h) not in ok_)
+            fresh = [h for h in fresh if id(h) in ok_]
+        except Exception as e:
+            print(f"(nba one-per-game skipped: {e})", file=sys.stderr)
         held.sort(key=lambda h: -h["conv"])
         _ord = {"toward": 0, "flat": 1, "away": 2}
         fresh.sort(key=lambda h: (_ord.get(h.get("move_tier"), 1), -h["conv"]))   # EXP-030: line moving toward first
@@ -841,6 +972,8 @@ def main():
                 print(f"(note: {len(bad)} wallet lookups failed — scan was partial)")
             if held:
                 print(f"({len(held)} withheld — contested: a tracked sharp is on the other side)")
+            if nba_held:
+                print(f"({nba_held} more NBA held back — one play per game)")
             print()
             for h in fresh:
                 mins = (h["start"] - now).total_seconds() / 60
